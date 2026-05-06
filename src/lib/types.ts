@@ -377,6 +377,22 @@ export interface Settings {
   fiscalYearEndMonth: number; // 12 = Dezember
   signup?: SignupBranding;
   newsletter?: NewsletterBranding;
+  /** Stammdaten der Genossenschaft (für Bescheinigungen, Impressum, etc.) */
+  genossenschaft?: GenossenschaftStammdaten;
+}
+
+export interface GenossenschaftStammdaten {
+  name?: string;
+  strasse?: string;
+  hausnummer?: string;
+  plz?: string;
+  ort?: string;
+  land?: Land;
+  steuernummer?: string;
+  ustIdNr?: string;
+  vertretenDurch?: string;
+  registergericht?: string;
+  registernummer?: string;
 }
 
 export interface SignupBranding {
