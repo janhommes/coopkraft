@@ -202,6 +202,31 @@ function DashboardPage() {
         </div>
       )}
 
+      {showVorstandCharts && dividendRuns.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Dividendenläufe</CardTitle>
+            <p className="text-xs text-muted-foreground">Ausschüttungen je Geschäftsjahr</p>
+          </CardHeader>
+          <CardContent>
+            <Link to="/app/dividenden" className="text-sm text-primary underline">
+              Alle Dividendenläufe öffnen →
+            </Link>
+            <div className="mt-3 space-y-1 text-sm">
+              {dividendRuns.slice(-5).reverse().map((r) => {
+                const empfaenger = new Set(r.items.map((i) => i.memberId)).size;
+                return (
+                  <div key={r.id} className="flex items-center justify-between border-b py-1.5 last:border-0">
+                    <span>GJ {r.fiscalYear} · {r.ratePercent}% · {empfaenger} Empfänger</span>
+                    <span className="font-semibold">{formatEuro(r.totalAmount)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {(user.roles.includes("mitgliedsbestaetiger") || user.roles.includes("aufsichtsrat")) && pending.length > 0 && (
         <Card>
           <CardHeader><CardTitle>Offene Beitritte</CardTitle></CardHeader>
