@@ -171,14 +171,42 @@ export async function createDividendRun(
   return run;
 }
 
-export async function aggregateByMember(items: DividendRun["items"]): Promise<{ member: Member; total: number }[]> {
+export interface MemberDividendAggregate {
+  member: Member;
+  total: number;
+  gross: number;
+  kapest: number;
+  soli: number;
+  kist: number;
+  net: number;
+}
+export async function aggregateByMember(
+  items: DividendRun["items"],
+): Promise<MemberDividendAggregate[]> {
   const members = await getAll<Member>("members");
-  const map = new Map<string, number>();
-  for (const it of items) map.set(it.memberId, (map.get(it.memberId) ?? 0) + it.amount);
-  const out: { member: Member; total: number }[] = [];
-  for (const [mid, total] of map.entries()) {
+  const map = new Map<string, { gross: number; kapest: number; soli: number; kist: number; net: number }>();
+  for (const it of items) {
+    const e = map.get(it.memberId) ?? { gross: 0, kapest: 0, soli: 0, kist: 0, net: 0 };
+    e.gross += it.gross ?? it.amount;
+    e.kapest += it.kapest ?? 0;
+    e.soli += it.soli ?? 0;
+    e.kist += it.kist ?? 0;
+    e.net += it.net ?? it.amount;
+    map.set(it.memberId, e);
+  }
+  const out: MemberDividendAggregate[] = [];
+  for (const [mid, agg] of map.entries()) {
     const m = members.find((x) => x.id === mid);
-    if (m) out.push({ member: m, total: +total.toFixed(2) });
+    if (!m) continue;
+    out.push({
+      member: m,
+      total: +agg.gross.toFixed(2),
+      gross: +agg.gross.toFixed(2),
+      kapest: +agg.kapest.toFixed(2),
+      soli: +agg.soli.toFixed(2),
+      kist: +agg.kist.toFixed(2),
+      net: +agg.net.toFixed(2),
+    });
   }
   return out.sort((a, b) => b.total - a.total);
 }
