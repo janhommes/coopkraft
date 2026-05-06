@@ -51,6 +51,7 @@ export const TERMINATION_STATUS_LABELS: Record<string, string> = {
   approved: "Genehmigt",
   rejected: "Abgelehnt",
   completed: "Abgeschlossen",
+  cancelled: "Zurückgezogen",
 };
 
 export const TRANSFER_STATUS_LABELS: Record<string, string> = {
