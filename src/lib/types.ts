@@ -1,0 +1,306 @@
+export type Role =
+  | "mitglied"
+  | "mitgliederverwalter"
+  | "vorstand"
+  | "aufsichtsrat"
+  | "mitgliedsbestaetiger"
+  | "zahlungspruefer"
+  | "kommunikation"
+  | "auszahler"
+  | "admin";
+
+export const ALL_ROLES: Role[] = [
+  "mitglied",
+  "mitgliederverwalter",
+  "vorstand",
+  "aufsichtsrat",
+  "mitgliedsbestaetiger",
+  "zahlungspruefer",
+  "kommunikation",
+  "auszahler",
+  "admin",
+];
+
+export const ROLE_LABELS: Record<Role, string> = {
+  mitglied: "Mitglied",
+  mitgliederverwalter: "Mitgliederverwalter",
+  vorstand: "Vorstand",
+  aufsichtsrat: "Aufsichtsrat",
+  mitgliedsbestaetiger: "Mitgliedsbestätiger",
+  zahlungspruefer: "Zahlungsprüfer",
+  kommunikation: "Kommunikation",
+  auszahler: "Auszahler",
+  admin: "Admin",
+};
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  roles: Role[];
+  /** Optional verknüpftes Mitglied (für Rolle "mitglied") */
+  memberId?: string;
+}
+
+export type Kontakttyp = "Privatperson" | "Unternehmen";
+export type Anrede = "Frau" | "Herr" | "Divers" | "Keine";
+export type Land = "DE" | "AT" | "CH";
+
+export type MemberStatus = "pending" | "active" | "terminating" | "terminated" | "rejected";
+
+export interface Member {
+  id: string;
+  mitgliedsnummer: number;
+  status: MemberStatus;
+  typ: Kontakttyp;
+  anrede: Anrede;
+  titel?: string;
+  bevorzugteAnrede?: string;
+  vorname: string;
+  nachname: string;
+  firma?: string;
+  geburtsdatum?: string;
+  email: string;
+  telefon?: string;
+  strasse: string;
+  hausnummer: string;
+  plz: string;
+  ort: string;
+  land: Land;
+  iban?: string;
+  bic?: string;
+  kontoinhaber?: string;
+  newsletter: boolean;
+  /** Datum, ab dem die Mitgliedschaft aktiv ist (Beitrittsdatum) */
+  beitrittDatum?: string;
+  /** Bei Status "terminating" / "terminated" gesetzt */
+  austrittDatum?: string;
+  kuendigungsgrund?: string;
+  customFields: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type LotStatus =
+  | "pending_payment"
+  | "active"
+  | "terminating"
+  | "transferred"
+  | "repaid";
+
+export interface ShareLot {
+  id: string;
+  memberId: string;
+  count: number;
+  valuePerShare: number;
+  signedAt: string;
+  paidAt?: string;
+  status: LotStatus;
+  /** Bei terminating: berechnetes Auszahlungsdatum */
+  payoutDate?: string;
+  /** Bei transferred: Ziel-Lot-ID */
+  transferredToLotId?: string;
+  /** Stammt aus Übertragung */
+  sourceLotId?: string;
+}
+
+export interface Approval {
+  id: string;
+  memberId: string;
+  userId: string;
+  userName: string;
+  role: Role;
+  decision: "approve" | "reject";
+  reason?: string;
+  at: string;
+}
+
+export interface PaymentConfirmation {
+  id: string;
+  memberId: string;
+  lotId: string;
+  userId: string;
+  userName: string;
+  amount: number;
+  at: string;
+}
+
+export type TerminationTarget = "membership" | "share";
+export type TerminationStatus = "pending" | "approved" | "rejected" | "completed";
+
+export interface Termination {
+  id: string;
+  target: TerminationTarget;
+  memberId: string;
+  /** Nur bei target="share" */
+  lotId?: string;
+  /** Anteilanzahl bei share-Kündigung (Teilkündigung möglich) */
+  shareCount?: number;
+  requestedBy: string;
+  requestedAt: string;
+  reason?: string;
+  /** Berechneter frühester Austrittstermin */
+  effectiveDate: string;
+  /** Auszahlungsdatum (kann nach effectiveDate liegen) */
+  payoutDate: string;
+  status: TerminationStatus;
+  approvals: { userId: string; userName: string; role: Role; at: string }[];
+}
+
+export type TransferKind = "sale" | "donation";
+export type TransferStatus = "pending" | "approved" | "rejected";
+
+export interface ShareTransfer {
+  id: string;
+  kind: TransferKind;
+  fromMemberId: string;
+  fromLotId: string;
+  toMemberId: string;
+  count: number;
+  pricePerShare: number;
+  note?: string;
+  status: TransferStatus;
+  requestedBy: string;
+  requestedAt: string;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export type DocVisibility = "public" | "members" | "internal";
+export type DocCategory =
+  | "Satzung"
+  | "Geschäftsbericht"
+  | "Protokoll"
+  | "Sonstiges"
+  | "Beitrittsantrag"
+  | "Ausweiskopie"
+  | "SEPA-Mandat"
+  | "Kündigung";
+
+export interface DocumentRecord {
+  id: string;
+  /** undefined = globales Dokument */
+  memberId?: string;
+  title: string;
+  description?: string;
+  category: DocCategory;
+  visibility: DocVisibility;
+  /** Slug nur für globale public-Dokumente */
+  slug?: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: string;
+  uploadedBy: string;
+  /** Pro Mitglieds-Doc: auch für Mitglied selbst sichtbar */
+  visibleToMember?: boolean;
+}
+
+export interface DocumentFile {
+  id: string; // = DocumentRecord.id
+  blob: Blob;
+}
+
+export type CampaignType = "newsletter" | "termin" | "mitteilung";
+export interface Campaign {
+  id: string;
+  type: CampaignType;
+  subject: string;
+  bodyHtml: string;
+  /** Termin-spezifisch */
+  startsAt?: string;
+  endsAt?: string;
+  location?: string;
+  /** Empfängerfilter */
+  audience: { newsletterOnly: boolean; statuses: MemberStatus[] };
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface DividendRun {
+  id: string;
+  fiscalYear: number;
+  ratePercent: number;
+  createdAt: string;
+  createdBy: string;
+  items: { memberId: string; lotId: string; days: number; amount: number }[];
+  totalAmount: number;
+}
+
+export interface AuditEntry {
+  id: string;
+  memberId?: string;
+  userId: string;
+  userName: string;
+  action: string;
+  details?: string;
+  at: string;
+}
+
+export type CustomFieldType = "text" | "number" | "date" | "checkbox" | "select";
+export interface CustomFieldDef {
+  id: string;
+  key: string;
+  label: string;
+  type: CustomFieldType;
+  required: boolean;
+  showOnSignup: boolean;
+  options?: string[];
+}
+
+export type StichtagKind = "monthEnd" | "quarterEnd" | "halfYearEnd" | "yearEnd" | "free";
+export type AuszahlungsRegel = "immediate" | "afterFiscalYear";
+
+export interface KuendigungsKonfig {
+  fristAnzahl: number;
+  fristEinheit: "month" | "year";
+  stichtag: StichtagKind;
+  mindestHaltedauerMonate: number;
+  bestaetigerRollen: Role[];
+  anzahlBestaetigungen: number;
+  auszahlung: AuszahlungsRegel;
+}
+
+export interface BeitrittsKonfig {
+  anzahlBestaetigungen: number;
+  zahlungPflicht: boolean;
+  zahlungspruefer: Role[];
+  aufsichtsratPflicht: boolean;
+  aufsichtsratAnzahl: number;
+  verhindereDoppelapproval: boolean;
+  verhindereSelfApproval: boolean;
+}
+
+export interface TransferKonfig {
+  verkaufErlaubt: boolean;
+  spendeErlaubt: boolean;
+  bestaetigerRollen: Role[];
+}
+
+export interface WorkflowConfig {
+  beitritt: BeitrittsKonfig;
+  membership: KuendigungsKonfig;
+  share: KuendigungsKonfig;
+  transfer: TransferKonfig;
+}
+
+export interface Settings {
+  genossenschaftsName: string;
+  /** Logo als data-URL */
+  logoDataUrl?: string;
+  primary: string; // oklch(...)
+  accent: string; // oklch(...)
+  anteilsWert: number;
+  minAnteile: number;
+  maxAnteile: number;
+  bank: {
+    kontoinhaber: string;
+    iban: string;
+    bic: string;
+    glaeubigerId?: string;
+    land: Land;
+  };
+  laenderReihenfolge: Land[];
+  defaultLand: Land;
+  fiscalYearEndMonth: number; // 12 = Dezember
+}

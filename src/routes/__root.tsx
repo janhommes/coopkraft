@@ -1,6 +1,21 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRouteWithContext,
+  HeadContent,
+  Scripts,
+} from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import appCss from "../styles.css?url";
+import { AppBootstrap } from "@/components/providers/AppBootstrap";
+import { AuthProvider } from "@/components/providers/AuthProvider";
+import { BrandingProvider } from "@/components/providers/BrandingProvider";
+import { Toaster } from "@/components/ui/sonner";
+
+interface RouterContext {
+  queryClient: QueryClient;
+}
 
 function NotFoundComponent() {
   return (
@@ -24,19 +39,17 @@ function NotFoundComponent() {
   );
 }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Genossenschaft – Mitgliederverwaltung" },
+      { name: "description", content: "Mitglieder, Anteile, Dividenden und Kommunikation für Energiegenossenschaften" },
+      { property: "og:title", content: "Genossenschaft – Mitgliederverwaltung" },
+      { property: "og:description", content: "Mitglieder, Anteile, Dividenden und Kommunikation" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -52,7 +65,7 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="de">
       <head>
         <HeadContent />
       </head>
@@ -65,5 +78,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  const { queryClient } = Route.useRouteContext();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrandingProvider>
+        <AuthProvider>
+          <AppBootstrap>
+            <Outlet />
+            <Toaster richColors position="top-right" />
+          </AppBootstrap>
+        </AuthProvider>
+      </BrandingProvider>
+    </QueryClientProvider>
+  );
 }
