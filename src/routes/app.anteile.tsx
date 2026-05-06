@@ -4,7 +4,7 @@ import { listLots } from "@/services/shares.service";
 import { listMembers } from "@/services/members.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatDate, formatEuro } from "@/lib/locale";
+import { formatDate, formatEuro, lotStatusLabel } from "@/lib/locale";
 
 export const Route = createFileRoute("/app/anteile")({
   component: AnteilePage,
@@ -33,7 +33,7 @@ function AnteilePage() {
                     <td className="p-3">{l.count}</td>
                     <td className="p-3">{formatEuro(l.count * l.valuePerShare)}</td>
                     <td className="p-3">{formatDate(l.signedAt)}</td>
-                    <td className="p-3"><Badge variant="outline">{l.status}</Badge></td>
+                    <td className="p-3"><Badge variant="outline">{lotStatusLabel(l.status)}</Badge></td>
                   </tr>
                 );
               })}
