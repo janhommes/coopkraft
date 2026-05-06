@@ -317,4 +317,10 @@ export interface SignupBranding {
   layout: "stepper" | "single";
   /** Eigenes CSS, wird nur auf der öffentlichen Anmelde-Seite injiziert */
   customCss?: string;
+  /** Titel der öffentlichen Anmeldeseite */
+  title?: string;
+  /** Text für die Satzungs-Akzeptanz-Checkbox (HTML erlaubt: z.B. Link auf Satzung) */
+  satzungText?: string;
+  /** Newsletter-Opt-In auf dem Formular anzeigen */
+  showNewsletter: boolean;
 }
