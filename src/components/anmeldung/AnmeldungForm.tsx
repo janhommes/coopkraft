@@ -16,12 +16,12 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSettings } from "@/services/settings.service";
-import { listCustomFields } from "@/services/customFields.service";
+import { listCustomFields, validateCustomFields } from "@/services/customFields.service";
 import { createMember } from "@/services/members.service";
 import { createLot } from "@/services/shares.service";
 import { isValidIban } from "@/services/sepa.service";
 import { LAND_LABELS, formatEuro } from "@/lib/locale";
-import type { Anrede, Kontakttyp, Land } from "@/lib/types";
+import type { Anrede, CustomFieldDef, Kontakttyp, Land } from "@/lib/types";
 
 const stepLabels = ["Persönlich", "Adresse", "Bank", "Anteile", "Bestätigung"];
 
@@ -57,6 +57,7 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
   const layout: "stepper" | "single" = layoutOverride ?? settings?.signup?.layout ?? "stepper";
   const [step, setStep] = useState(0);
   const [done, setDone] = useState<{ name: string; nummer: number } | null>(null);
+  const [cfErrors, setCfErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<FormState>({
     typ: "Privatperson",
     anrede: "Frau",
@@ -86,17 +87,18 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
   const submitMut = useMutation({
     mutationFn: async () => {
       if (!settings) throw new Error("Konfiguration nicht geladen");
+      const cf = state.custom;
       const member = await createMember(
         {
           typ: state.typ,
           anrede: state.anrede,
-          titel: state.titel || undefined,
+          titel: ((cf.titel as string) || state.titel) || undefined,
           vorname: state.vorname.trim(),
           nachname: state.nachname.trim(),
-          firma: state.firma || undefined,
-          geburtsdatum: state.geburtsdatum || undefined,
+          firma: ((cf.firma as string) || state.firma) || undefined,
+          geburtsdatum: ((cf.geburtsdatum as string) || state.geburtsdatum) || undefined,
           email: state.email.trim(),
-          telefon: state.telefon || undefined,
+          telefon: ((cf.telefon as string) || state.telefon) || undefined,
           strasse: state.strasse,
           hausnummer: state.hausnummer,
           plz: state.plz,
@@ -105,7 +107,7 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
           iban: state.iban.replace(/\s+/g, ""),
           bic: state.bic,
           kontoinhaber: state.kontoinhaber || `${state.vorname} ${state.nachname}`,
-          newsletter: state.newsletter,
+          newsletter: cf.newsletter !== undefined ? !!cf.newsletter : state.newsletter,
           customFields: state.custom,
         },
         null,
@@ -137,6 +139,10 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
     if (s === 0) {
       if (!state.vorname || !state.nachname) return "Vor- und Nachname sind Pflicht";
       if (!z.string().email().safeParse(state.email).success) return "Bitte gültige E-Mail-Adresse angeben";
+      const errs = validateCustomFields(state.custom, (cfQ.data ?? []).filter((f) => f.showOnSignup && ["titel","firma","geburtsdatum","telefon","bevorzugteAnrede"].includes(f.key)));
+      setCfErrors((e) => ({ ...e, ...errs }));
+      const first = Object.values(errs)[0];
+      if (first) return first;
     }
     if (s === 1) {
       if (!state.strasse || !state.hausnummer || !state.plz || !state.ort) return "Bitte vollständige Adresse angeben";
@@ -148,9 +154,18 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
       if (!settings) return "Konfiguration lädt noch";
       if (state.anteile < settings.minAnteile) return `Mindestens ${settings.minAnteile} Anteile`;
       if (state.anteile > settings.maxAnteile) return `Höchstens ${settings.maxAnteile} Anteile`;
+      const errs = validateCustomFields(state.custom, (cfQ.data ?? []).filter((f) => f.showOnSignup && !["titel","firma","geburtsdatum","telefon","bevorzugteAnrede","newsletter"].includes(f.key)));
+      setCfErrors((e) => ({ ...e, ...errs }));
+      const first = Object.values(errs)[0];
+      if (first) return first;
     }
     if (s === 4) {
       if (!state.satzungAkzeptiert) return "Bitte Satzung bestätigen";
+      const newsletterDef = (cfQ.data ?? []).find((f) => f.key === "newsletter");
+      if (newsletterDef?.required && !(state.custom.newsletter ?? state.newsletter)) {
+        setCfErrors((e) => ({ ...e, newsletter: "Newsletter ist erforderlich" }));
+        return "Newsletter ist erforderlich";
+      }
     }
     return null;
   };
@@ -223,16 +238,13 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Titel"><Input value={state.titel} onChange={(e) => set("titel", e.target.value)} /></Field>
-            {state.typ === "Unternehmen" && (
-              <Field label="Firma"><Input value={state.firma} onChange={(e) => set("firma", e.target.value)} /></Field>
-            )}
             <Field label="Vorname *"><Input value={state.vorname} onChange={(e) => set("vorname", e.target.value)} /></Field>
             <Field label="Nachname *"><Input value={state.nachname} onChange={(e) => set("nachname", e.target.value)} /></Field>
-            <Field label="Geburtsdatum"><Input type="date" value={state.geburtsdatum} onChange={(e) => set("geburtsdatum", e.target.value)} /></Field>
             <Field label="E-Mail *"><Input type="email" value={state.email} onChange={(e) => set("email", e.target.value)} /></Field>
-            <Field label="Telefon"><Input value={state.telefon} onChange={(e) => set("telefon", e.target.value)} /></Field>
           </div>
+          {(cfQ.data ?? [])
+            .filter((f) => f.showOnSignup && f.type !== "checkbox" && ["titel","firma","geburtsdatum","telefon","bevorzugteAnrede"].includes(f.key))
+            .map((f) => renderCustomField(f, state.custom, set, cfErrors))}
           </Section>
         )}
 
@@ -280,22 +292,9 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
               <p className="text-sm">Anteilswert pro Stück: <strong>{formatEuro(settings?.anteilsWert ?? 0)}</strong></p>
               <p className="mt-1 text-lg font-semibold">Gesamt: {formatEuro(totalCost)}</p>
             </div>
-            {(cfQ.data ?? []).filter((f) => f.showOnSignup).map((f) => (
-              <Field key={f.id} label={f.label + (f.required ? " *" : "")}>
-                {f.type === "select" && (
-                  <Select value={(state.custom[f.key] as string) ?? ""} onValueChange={(v) => set("custom", { ...state.custom, [f.key]: v })}>
-                    <SelectTrigger><SelectValue placeholder="Bitte wählen" /></SelectTrigger>
-                    <SelectContent>{(f.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                  </Select>
-                )}
-                {f.type === "text" && <Input value={(state.custom[f.key] as string) ?? ""} onChange={(e) => set("custom", { ...state.custom, [f.key]: e.target.value })} />}
-                {f.type === "number" && <Input type="number" value={(state.custom[f.key] as number) ?? 0} onChange={(e) => set("custom", { ...state.custom, [f.key]: Number(e.target.value) })} />}
-                {f.type === "date" && <Input type="date" value={(state.custom[f.key] as string) ?? ""} onChange={(e) => set("custom", { ...state.custom, [f.key]: e.target.value })} />}
-                {f.type === "checkbox" && (
-                  <Checkbox checked={!!state.custom[f.key]} onCheckedChange={(c) => set("custom", { ...state.custom, [f.key]: !!c })} />
-                )}
-              </Field>
-            ))}
+            {(cfQ.data ?? [])
+              .filter((f) => f.showOnSignup && !["titel","firma","geburtsdatum","telefon","bevorzugteAnrede","newsletter"].includes(f.key))
+              .map((f) => renderCustomField(f, state.custom, set, cfErrors))}
           </div>
           </Section>
         )}
@@ -323,12 +322,18 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
                 }}
               />
             </label>
-            {(settings?.signup?.showNewsletter ?? true) && (
-              <label className="flex items-start gap-2 text-sm">
-                <Checkbox checked={state.newsletter} onCheckedChange={(c) => set("newsletter", !!c)} className="mt-0.5" />
-                <span>Ich möchte den Newsletter erhalten.</span>
-              </label>
-            )}
+            {(settings?.signup?.showNewsletter ?? true) && (cfQ.data ?? [])
+              .filter((f) => f.key === "newsletter" && f.showOnSignup)
+              .map((f) => (
+                <label key={f.id} className="flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={state.custom.newsletter !== undefined ? !!state.custom.newsletter : state.newsletter}
+                    onCheckedChange={(c) => set("custom", { ...state.custom, newsletter: !!c })}
+                    className="mt-0.5"
+                  />
+                  <span>{f.label}{f.required && " *"}</span>
+                </label>
+              ))}
           </div>
           </Section>
         )}
@@ -374,5 +379,41 @@ function Section({ title, hide, children }: { title: string; hide: boolean; chil
       <h2 className="mb-4 text-lg font-semibold">{title}</h2>
       {children}
     </section>
+  );
+}
+
+function renderCustomField(
+  f: CustomFieldDef,
+  values: Record<string, unknown>,
+  set: (k: "custom", v: Record<string, unknown>) => void,
+  errors: Record<string, string>,
+) {
+  const v = values[f.key];
+  const onChange = (val: unknown) => set("custom", { ...values, [f.key]: val });
+  const err = errors[f.key];
+  return (
+    <div key={f.id} className="space-y-1.5">
+      <Label>{f.label}{f.required && " *"}</Label>
+      {f.type === "text" && <Input value={(v as string) ?? ""} onChange={(e) => onChange(e.target.value)} />}
+      {f.type === "number" && (
+        <Input type="number" value={v === undefined ? "" : (v as number)} onChange={(e) => onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+      )}
+      {f.type === "date" && <Input type="date" value={(v as string) ?? ""} onChange={(e) => onChange(e.target.value)} />}
+      {f.type === "checkbox" && (
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox checked={!!v} onCheckedChange={(c) => onChange(!!c)} />
+          <span className="text-muted-foreground">{f.label}</span>
+        </label>
+      )}
+      {f.type === "select" && (
+        <Select value={(v as string) ?? ""} onValueChange={(val) => onChange(val)}>
+          <SelectTrigger><SelectValue placeholder="Bitte wählen" /></SelectTrigger>
+          <SelectContent>
+            {(f.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      )}
+      {err && <p className="text-xs text-destructive">{err}</p>}
+    </div>
   );
 }

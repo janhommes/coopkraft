@@ -314,6 +314,8 @@ export interface CustomFieldDef {
   required: boolean;
   showOnSignup: boolean;
   options?: string[];
+  /** System-Felder (Telefon, Firma, …) – nicht löschbar, Schlüssel/Typ nicht änderbar */
+  system?: boolean;
 }
 
 export type StichtagKind = "monthEnd" | "quarterEnd" | "halfYearEnd" | "yearEnd" | "free";

@@ -1,110 +1,81 @@
-## Ziel
+# Custom Fields & Stammdaten neu strukturieren
 
-Bei jedem Dividendenlauf werden pro Mitglied die Steuern korrekt einbehalten und eine Steuerbescheinigung als PDF erzeugt, die in der Mitglieds-Akte (Dokumente) abgelegt und für das Mitglied sichtbar ist.
+## 1. Definitive Stammdaten (bleiben fest am Mitglied)
 
-## 1. Datenmodell-Erweiterungen
+Diese Felder bleiben hart im `Member`-Datenmodell, weil sie für Geschäftsprozesse (SEPA, Steuerbescheinigung, Briefe, Anrede) zwingend gebraucht werden:
 
-**`Member`** – neue Felder (alle optional, Default = nichts ändern):
-- `freistellung: boolean` – wenn `true`: keine Abzüge (voll freigestellt).
-- `konfession: "keine" | "rk" | "ev" | "sonstige"` – nur informativ; "rk"/"ev" lösen KiSt aus.
-- `bundesland: "BW" | "BY" | "BE" | "BB" | "HB" | "HH" | "HE" | "MV" | "NI" | "NW" | "RP" | "SL" | "SN" | "ST" | "SH" | "TH"` – steuert KiSt-Satz (BY/BW = 8 %, sonst 9 %).
-- `steuerId?: string` – Steuer-Identifikationsnummer (für die Bescheinigung).
+- **Identität**: Mitgliedsnummer, Status, Typ (Person/Firma), Anrede, Vorname, Nachname
+- **Kontakt**: E-Mail
+- **Adresse** (für Steuerbescheinigung & Post): Straße, Hausnummer, PLZ, Ort, Land
+- **Bankverbindung** (für SEPA): IBAN, BIC, Kontoinhaber
+- **Steuerblock** (für KapESt-Lauf): Freistellung, Konfession, Bundesland, Steuer-ID
+- **System**: Beitritts-/Austrittsdatum, Kündigungsgrund
 
-UI: Im Mitglieds-Detail neuer Block „Steuerliche Angaben" (editierbar mit `edit:member`/Self).
+## 2. Verschoben in Custom Fields (System-Definitionen)
 
-**`Settings.genossenschaft`** – neuer Block für die Bescheinigungs-Kopfzeile:
-- `name`, `strasse`, `hausnummer`, `plz`, `ort`, `land`
-- `steuernummer?`, `ustIdNr?`
-- `vertretenDurch?` (z. B. „Vorstand: Max Mustermann")
-- `registergericht?`, `registernummer?` (optional)
+Diese bisher festen Felder werden zu System-Custom-Fields:
+`titel`, `bevorzugteAnrede`, `firma`, `geburtsdatum`, `telefon`, `newsletter`
 
-UI: **Neuer Tab „Stammdaten" im Admin** (`/app/admin/stammdaten`) für genau diese Felder. (Konto-Tab bleibt für Bankdaten.)
+- Sie bleiben technisch im `Member`-Typ (kein Datenverlust, keine Migration), werden aber in der UI **nicht** mehr im festen Stammdaten-Block angezeigt.
+- Beim ersten Start legt `seed.ts` passende `CustomFieldDef`-Einträge mit `system: true` an (Schlüssel = bisheriger Feldname). Der Save-Handler im Mitglied schreibt die Werte aus `customFields[key]` zurück in die nativen Felder, damit Anmeldeformular, SEPA, Newsletter etc. unverändert weiterlaufen.
+- Bestehende Daten in `m.telefon` etc. werden beim Anzeigen automatisch als Initialwert für das Custom Field benutzt.
 
-**`DividendRun.items`** – pro Item gespeichert:
-- `gross: number` (bisher `amount`, semantisch „brutto")
-- `kapest: number`
-- `soli: number`
-- `kist: number`
-- `net: number` (`gross - kapest - soli - kist`)
-- `freigestellt: boolean` (Snapshot, falls Flag später geändert wird)
-- `kistRate: number` (8 oder 9, oder 0)
-- `documentId?: string` (Verknüpfung zur erzeugten Bescheinigung)
+## 3. Anzeige im Mitglied (Stammdaten-Tab)
 
-`DividendRun` zusätzlich: `totals: { gross, kapest, soli, kist, net }`.
+Unterhalb des bestehenden Adress-/Bank-Blocks und über dem Steuer-Block kommt eine neue Card **„Weitere Angaben"**:
 
-Bestehende `amount` bleibt aus Kompatibilität gleich Brutto; neue Felder additiv.
+- Listet alle `CustomFieldDef` (System + benutzerdefiniert) als passende Inputs (text/number/date/checkbox/select).
+- Pflichtfelder mit `*` markiert.
+- Beim Speichern werden Werte in `m.customFields[key]` geschrieben + bei System-Feldern in das native Feld gespiegelt.
+- Wenn keine Custom Fields definiert sind, wird die Card ausgeblendet.
 
-## 2. Berechnung
+## 4. Required-Validierung (überall)
 
-Pro Lot wie bisher Brutto = `kapital * rate% * tage/365`.
+Neue zentrale Helper-Funktion `validateMember(m, defs)`:
+- Prüft alle Pflicht-`CustomFieldDef` gegen `m.customFields[key]` (leerer String / undefined / leere Auswahl = fehlt; Checkbox-required = muss true sein).
+- Wird benutzt in:
+  - **`AnmeldungForm`** vor `submitJoinRequest`
+  - **`StammForm`** vor `saveMember` im Mitglied-Detail
+- Fehler werden als roter Hinweis pro Feld + Toast angezeigt; Speichern wird blockiert.
+- Hartes Required gilt also auch für Bestandsmitglieder (gemäß Wunsch „Überall").
 
-Pro Mitglied dann:
-- `freistellung === true` → `kapest = soli = kist = 0`, `net = gross`.
-- sonst:
-  - `kapest = round2(gross * 0.25)`
-  - `soli   = round2(kapest * 0.055)`
-  - `kistRate = (konfession in {rk, ev}) ? (bundesland in {BY, BW} ? 8 : 9) : 0`
-  - `kist   = round2(kapest * kistRate / 100)`
-  - bei KiSt > 0: minimaler KapESt-Minderungs-Effekt (§ 32d EStG) wird **nicht** modelliert (zu komplex; wird in der Bescheinigung als „ohne Anrechnung KiSt-Sonderausgabe" hinweisen). Vereinfachung explizit dokumentieren.
-- `net = gross - kapest - soli - kist`.
+## 5. Custom-Felder-Admin (`/app/admin/felder`)
 
-## 3. PDF-Bescheinigung
+UI-Erweiterung:
+- Spalte/Toggle **„Pflichtfeld"** im Anlage-Formular (Checkbox `required`) – ist im Datenmodell schon da, fehlt nur im UI.
+- In der Liste neben dem Label Badges anzeigen: „Pflicht", „Anmeldung", „System".
+- System-Felder können bearbeitet (Label, required, showOnSignup), aber **nicht gelöscht** werden (`system: true` im Datensatz, Löschen-Button ausgeblendet).
+- Edit-Modus: aktuell ist nur Anlegen möglich – wir ergänzen Inline-Bearbeitung pro Zeile (Label, required, showOnSignup, Optionen).
 
-Pro Empfänger des Laufs ein PDF „Steuerbescheinigung Dividende GJ {jahr}" mit:
-- Aussteller-Block (aus `Settings.genossenschaft`)
-- Empfänger-Block (Mitglied: Anschrift, Mitgliedsnr., Steuer-ID falls vorhanden)
-- Zeitraum, Anzahl Anteile, gehaltene Tage je Lot
-- Tabelle: Brutto, KapESt 25 %, Soli 5,5 % auf KapESt, KiSt {0/8/9 %}, Auszahlungsbetrag (netto)
-- Hinweis bei Freistellung („Freistellungsauftrag liegt vor")
-- Datum, Ort, Hinweis „Diese Bescheinigung wurde elektronisch erzeugt"
+## Technische Details
 
-Erzeugung: clientseitig mit `jspdf` + `jspdf-autotable` (passt zu IndexedDB-Architektur, keine Server-Round-Trips). Logo aus `Settings.logoDataUrl`, falls vorhanden.
+### Typen (`src/lib/types.ts`)
+- `CustomFieldDef` bekommt optional `system?: boolean`.
 
-Ablage: über bestehenden `documents.service.uploadDocument` als `DocumentRecord` mit:
-- `memberId` = Empfänger
-- `category: "Sonstiges"` (oder neue Kategorie `"Steuerbescheinigung"` ergänzen)
-- `visibility: "internal"`, `visibleToMember: true`
-- `title: "Steuerbescheinigung Dividende GJ {jahr}"`
+### Service (`src/services/customFields.service.ts`)
+- `deleteCustomField`: wirft Fehler, wenn `system === true`.
+- Neue Helper `validateCustomFields(values, defs): { ok: boolean; errors: Record<string,string> }`.
 
-`documentId` wird ins jeweilige `DividendRun.items[]` zurückgeschrieben.
+### Seed (`src/services/seed.ts`)
+- Beim Init zusätzlich 6 System-Custom-Fields anlegen (idempotent via fixe IDs `system-telefon`, `system-firma` …).
+- Bei vorhandenen Mitgliedern: native Felder bleiben unverändert. Beim ersten Anzeigen im Mitglied wird `m.customFields[key] ?? m[key]` als Initialwert benutzt; nach erstem Speichern ist es synchronisiert.
 
-## 4. UI-Änderungen
+### Mitglied-Detail (`src/routes/app.mitglieder.$id.tsx`)
+- `StammForm` rendert nur noch die in Punkt 1 genannten festen Felder.
+- Neue Subkomponente `CustomFieldsBlock` rendert alle Defs, validiert, ruft `onChange`.
+- Vor `onSave`: `validateMember` aufrufen, bei Fehlern Toast + Inline-Hinweise.
 
-**Dividenden-Seite (`/app/dividenden`):**
-- Vorschau zeigt jetzt vier Spalten je Mitglied: Brutto · KapESt+Soli · KiSt · Netto.
-- „Berechnen & speichern" erzeugt Lauf + alle PDFs (Progress-Toast „PDFs werden erzeugt…").
-- In der Lauf-Detailansicht: pro Mitglied ein Download-Button für die Bescheinigung.
-- Lauf löschen: zugehörige Bescheinigungs-Dokumente werden mit gelöscht.
+### Anmeldeformular (`src/components/anmeldung/AnmeldungForm.tsx`)
+- Bestehende native Felder Titel/Firma/Geburtsdatum/Telefon/Newsletter werden weiterhin gerendert (sie sind ja jetzt System-Custom-Fields mit `showOnSignup=true`) – aber über die generische Custom-Field-Renderschleife, **nicht** mehr hartcodiert. Damit greift Required automatisch.
+- Validierung schon vorhanden, wird um Required-Check erweitert.
 
-**Mitglieds-Detail:**
-- Neuer Tab/Block „Steuer" (Freistellung, Konfession, Bundesland, Steuer-ID).
-- In der Dividenden-Liste pro Mitglied: Spalten Brutto/Netto + Link auf PDF.
+### Felder-Admin (`src/routes/app.admin.felder.tsx`)
+- Required-Checkbox + Anmeldeformular-Checkbox sichtbar.
+- System-Badge + Lösch-Schutz.
+- Inline-Edit-Modus pro Zeile.
 
-**Admin → Stammdaten (neu):**
-- Eingabe der Aussteller-Daten gemäß Settings-Block oben.
-- Wird in den Tab-Reiter oben eingereiht (zwischen „Konto" und „Branding").
+## Explizit ausgeschlossen
 
-## 5. Migration / Defaults
-
-- Beim ersten Laden: bestehende Mitglieder bekommen `freistellung=false`, `konfession="keine"`, `bundesland` = Default `"NW"` (kann global im Settings-Tab gesetzt werden, ergänzen wir als Default-Wert).
-- Bestehende Dividendenläufe: nicht rückwirkend neu berechnen. In der UI kennzeichnen als „ohne Steuerabzug (alt)" und Bescheinigungs-Button ausgeblendet.
-- Settings.genossenschaft: leer → Hinweis-Banner auf Dividenden-Seite „Bitte zuerst Stammdaten der Genossenschaft pflegen, sonst keine korrekten Bescheinigungen".
-
-## 6. Audit
-
-- Pro Lauf: Audit-Eintrag wie bisher, zusätzlich „N Bescheinigungen erstellt" und Summen Brutto/Netto/Steuern.
-- Pro PDF: kein extra Eintrag (zu lärmig); Lauf-Eintrag genügt.
-
-## Technische Notizen
-
-- Neue Dependency: `jspdf` + `jspdf-autotable` (clientseitig, keine Worker-Constraints relevant).
-- `dividends.service.calcDividend` wird um Steuer-Berechnung erweitert; Member-Lookup wird in die Berechnung gezogen, weil Steuersätze pro Mitglied unterschiedlich sind.
-- PDF-Erzeugung als eigene Datei `src/lib/dividend-certificate.ts` (pure function `buildCertificatePdf(...)` → `Blob`).
-- Kategorie `"Steuerbescheinigung"` zu `DocCategory` ergänzen, sonst bleibt Dokumenten-Pipeline unverändert.
-- Vereinfachungen, die wir dokumentieren: keine KapESt-Minderung durch KiSt-Sonderausgabenabzug, kein Sparer-Pauschbetrag, kein NV-Bescheinigungs-Workflow – diese Optionen können später nachgezogen werden.
-
-## Offen / explizit ausgeklammert
-
-- Zusammenveranlagung (2.000 €) – nicht modellierbar ohne Ehegatten-Verknüpfung.
-- Sparer-Pauschbetrag in Euro – bewusst durch „Freistellung ja/nein" ersetzt (Wunsch).
-- Echte elektronische Übermittlung an Finanzamt (BZSt) – out of scope.
+- Keine Daten-Migration alter Werte in `customFields` (gemäß Wunsch „Ignorieren").
+- Adresse/IBAN/Steuerblock bleiben fest – nicht als Custom Fields verfügbar.
+- Keine Änderungen an Dashboard-/Newsletter-/SEPA-Logik (nutzen weiter die nativen Felder).

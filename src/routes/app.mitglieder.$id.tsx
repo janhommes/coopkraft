@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import {
@@ -40,6 +41,7 @@ import { listAudit } from "@/services/audit.service";
 import { listDocuments, uploadDocument, deleteDocument, downloadDocument } from "@/services/documents.service";
 import { dividendsByMember } from "@/services/dividends.service";
 import { getSettings, getWorkflow } from "@/services/settings.service";
+import { listCustomFields, validateCustomFields, SYSTEM_FIELD_KEYS } from "@/services/customFields.service";
 import { calcEffectiveDate } from "@/lib/termination";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { can } from "@/lib/permissions";
@@ -513,22 +515,56 @@ function Row({ label, ok }: { label: string; ok: boolean }) {
 }
 
 function StammForm({ member, canEdit, onSave }: { member: Member; canEdit: boolean; onSave: (m: Member) => void | Promise<void> }) {
-  const [m, setM] = useState(member);
+  const cfQ = useQuery({ queryKey: ["customFields"], queryFn: listCustomFields });
+  // Initial: native System-Feld-Werte in customFields spiegeln, falls dort noch nichts steht
+  const initial: Member = (() => {
+    const cf = { ...(member.customFields ?? {}) };
+    for (const k of SYSTEM_FIELD_KEYS) {
+      if (cf[k] === undefined && (member as unknown as Record<string, unknown>)[k] !== undefined) {
+        cf[k] = (member as unknown as Record<string, unknown>)[k];
+      }
+    }
+    return { ...member, customFields: cf };
+  })();
+  const [m, setM] = useState<Member>(initial);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const defs = cfQ.data ?? [];
+
+  const handleSave = async () => {
+    const errs = validateCustomFields(m.customFields ?? {}, defs);
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      toast.error("Bitte Pflichtfelder ausfüllen");
+      return;
+    }
+    // System-Felder zurück in native Member-Felder spiegeln
+    const next: Member = { ...m, updatedAt: new Date().toISOString() };
+    const cf = m.customFields ?? {};
+    if (cf.titel !== undefined) next.titel = (cf.titel as string) || undefined;
+    if (cf.bevorzugteAnrede !== undefined) next.bevorzugteAnrede = (cf.bevorzugteAnrede as string) || undefined;
+    if (cf.firma !== undefined) next.firma = (cf.firma as string) || undefined;
+    if (cf.geburtsdatum !== undefined) next.geburtsdatum = (cf.geburtsdatum as string) || undefined;
+    if (cf.telefon !== undefined) next.telefon = (cf.telefon as string) || undefined;
+    if (cf.newsletter !== undefined) next.newsletter = !!cf.newsletter;
+    await onSave(next);
+  };
+
   return (
     <div className="space-y-4">
     <Card>
+      <CardHeader><CardTitle>Stammdaten</CardTitle></CardHeader>
       <CardContent className="grid gap-4 p-6 md:grid-cols-2">
         {([
           ["vorname", "Vorname"],
           ["nachname", "Nachname"],
           ["email", "E-Mail"],
-          ["telefon", "Telefon"],
           ["strasse", "Straße"],
           ["hausnummer", "Hausnummer"],
           ["plz", "PLZ"],
           ["ort", "Ort"],
           ["iban", "IBAN"],
           ["bic", "BIC"],
+          ["kontoinhaber", "Kontoinhaber"],
         ] as const).map(([k, l]) => (
           <div key={k} className="space-y-1.5">
             <Label>{l}</Label>
@@ -537,6 +573,55 @@ function StammForm({ member, canEdit, onSave }: { member: Member; canEdit: boole
         ))}
       </CardContent>
     </Card>
+
+    {defs.length > 0 && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Weitere Angaben</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 p-6 md:grid-cols-2">
+          {defs.map((def) => {
+            const value = m.customFields?.[def.key];
+            const setValue = (v: unknown) => {
+              setM({ ...m, customFields: { ...(m.customFields ?? {}), [def.key]: v } });
+              if (errors[def.key]) setErrors((e) => { const c = { ...e }; delete c[def.key]; return c; });
+            };
+            const err = errors[def.key];
+            return (
+              <div key={def.id} className={`space-y-1.5 ${def.type === "checkbox" ? "md:col-span-2" : ""}`}>
+                <Label>
+                  {def.label}{def.required && <span className="text-destructive"> *</span>}
+                </Label>
+                {def.type === "text" && (
+                  <Input disabled={!canEdit} value={(value as string) ?? ""} onChange={(e) => setValue(e.target.value)} />
+                )}
+                {def.type === "number" && (
+                  <Input type="number" disabled={!canEdit} value={(value as number) ?? ""} onChange={(e) => setValue(e.target.value === "" ? undefined : Number(e.target.value))} />
+                )}
+                {def.type === "date" && (
+                  <Input type="date" disabled={!canEdit} value={(value as string) ?? ""} onChange={(e) => setValue(e.target.value)} />
+                )}
+                {def.type === "checkbox" && (
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox disabled={!canEdit} checked={!!value} onCheckedChange={(c) => setValue(!!c)} />
+                    <span className="text-muted-foreground">{def.label}</span>
+                  </label>
+                )}
+                {def.type === "select" && (
+                  <Select disabled={!canEdit} value={(value as string) ?? ""} onValueChange={(v) => setValue(v)}>
+                    <SelectTrigger><SelectValue placeholder="Bitte wählen" /></SelectTrigger>
+                    <SelectContent>
+                      {(def.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+                {err && <p className="text-xs text-destructive">{err}</p>}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+    )}
 
     <Card>
       <CardHeader>
@@ -602,7 +687,7 @@ function StammForm({ member, canEdit, onSave }: { member: Member; canEdit: boole
 
     {canEdit && (
       <div>
-        <Button onClick={() => onSave({ ...m, updatedAt: new Date().toISOString() })}>Speichern</Button>
+        <Button onClick={handleSave}>Speichern</Button>
       </div>
     )}
     </div>
