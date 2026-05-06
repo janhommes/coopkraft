@@ -14,6 +14,7 @@ const items = [
   { to: "/app/admin/anteile", label: "Anteile" },
    { to: "/app/admin/felder", label: "Benutzerdefinierte Felder" },
   { to: "/app/admin/konto", label: "Bankkonto" },
+  { to: "/app/admin/stammdaten", label: "Stammdaten" },
   { to: "/app/admin/workflow", label: "Workflows & Kündigung" },
   { to: "/app/admin/users", label: "Benutzer & Rollen" },
 ] as const;
