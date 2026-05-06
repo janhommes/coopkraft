@@ -203,20 +203,7 @@ function KommPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div>
-              <Label>Typ</Label>
-              <Select value={type} onValueChange={(v) => setType(v as CampaignType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newsletter">Newsletter</SelectItem>
-                  <SelectItem value="termin">Termin</SelectItem>
-                  <SelectItem value="mitteilung">Mitteilung</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div><Label>Betreff</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
-          </div>
+          <div><Label>Betreff</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
 
           <div>
             <Label>Inhalt</Label>
@@ -261,8 +248,38 @@ function KommPage() {
             </p>
           </div>
 
-          {type === "newsletter" && (
-            <div>
+          <div className="space-y-2 rounded border p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Label className="m-0">Termin anhängen (.ics)</Label>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={eventEnabled} onChange={(e) => {
+                  setEventEnabled(e.target.checked);
+                  if (e.target.checked && !eventTitle) setEventTitle(subject);
+                }} />
+                Aktivieren
+              </label>
+            </div>
+            {eventEnabled && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="sm:col-span-2"><Label>Titel</Label><Input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} /></div>
+                <div><Label>Beginn</Label><Input type="datetime-local" value={eventStart} onChange={(e) => setEventStart(e.target.value)} /></div>
+                <div><Label>Ende</Label><Input type="datetime-local" value={eventEnd} onChange={(e) => setEventEnd(e.target.value)} /></div>
+                <div className="sm:col-span-2"><Label>Ort</Label><Input value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} placeholder="z. B. Genossenschaftshaus, Musterstraße 1" /></div>
+                <div className="sm:col-span-2"><Label>Beschreibung (optional)</Label><Textarea rows={2} value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} /></div>
+                <div className="sm:col-span-2">
+                  <Button type="button" size="sm" variant="outline" onClick={() => downloadIcs({ title: eventTitle, start: eventStart, end: eventEnd, location: eventLocation, description: eventDescription })}>
+                    <Download className="mr-1 h-4 w-4" /> .ics-Vorschau herunterladen
+                  </Button>
+                  <p className="mt-1 text-xs text-muted-foreground">Die .ics-Datei wird beim Versand als Anhang an alle Empfänger mitgeschickt.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
               <Label>Vorschau</Label>
               <Tabs defaultValue="desktop" className="mt-1.5">
                 <TabsList>
@@ -285,8 +302,7 @@ function KommPage() {
               {previewMember && (
                 <p className="mt-1 text-xs text-muted-foreground">Vorschau-Daten von: {previewMember.vorname} {previewMember.nachname}</p>
               )}
-            </div>
-          )}
+          </div>
 
           <div className="space-y-2 rounded border p-3">
             <Label>Empfänger</Label>
