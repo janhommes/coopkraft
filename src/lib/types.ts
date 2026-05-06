@@ -46,6 +46,36 @@ export type Kontakttyp = "Privatperson" | "Unternehmen";
 export type Anrede = "Frau" | "Herr" | "Divers" | "Keine";
 export type Land = "DE" | "AT" | "CH";
 
+export type Konfession = "keine" | "rk" | "ev" | "sonstige";
+export const KONFESSION_LABELS: Record<Konfession, string> = {
+  keine: "Keine",
+  rk: "Römisch-katholisch",
+  ev: "Evangelisch",
+  sonstige: "Sonstige (keine KiSt)",
+};
+
+export type Bundesland =
+  | "BW" | "BY" | "BE" | "BB" | "HB" | "HH" | "HE" | "MV"
+  | "NI" | "NW" | "RP" | "SL" | "SN" | "ST" | "SH" | "TH";
+export const BUNDESLAND_LABELS: Record<Bundesland, string> = {
+  BW: "Baden-Württemberg",
+  BY: "Bayern",
+  BE: "Berlin",
+  BB: "Brandenburg",
+  HB: "Bremen",
+  HH: "Hamburg",
+  HE: "Hessen",
+  MV: "Mecklenburg-Vorpommern",
+  NI: "Niedersachsen",
+  NW: "Nordrhein-Westfalen",
+  RP: "Rheinland-Pfalz",
+  SL: "Saarland",
+  SN: "Sachsen",
+  ST: "Sachsen-Anhalt",
+  SH: "Schleswig-Holstein",
+  TH: "Thüringen",
+};
+
 export type MemberStatus = "pending" | "active" | "terminating" | "terminated" | "rejected";
 
 export interface Member {
@@ -76,6 +106,11 @@ export interface Member {
   /** Bei Status "terminating" / "terminated" gesetzt */
   austrittDatum?: string;
   kuendigungsgrund?: string;
+  /** Steuerliche Angaben (Kapitalertragsteuer) */
+  freistellung?: boolean;
+  konfession?: Konfession;
+  bundesland?: Bundesland;
+  steuerId?: string;
   customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -175,7 +210,8 @@ export type DocCategory =
   | "Beitrittsantrag"
   | "Ausweiskopie"
   | "SEPA-Mandat"
-  | "Kündigung";
+  | "Kündigung"
+  | "Steuerbescheinigung";
 
 export interface DocumentRecord {
   id: string;
@@ -222,14 +258,41 @@ export interface Campaign {
   createdBy: string;
 }
 
+export interface DividendItem {
+  memberId: string;
+  lotId: string;
+  days: number;
+  /** Brutto-Betrag (vor Steuer) – identisch mit altem `amount` */
+  amount: number;
+  /** Brutto = amount, redundant für Klarheit */
+  gross?: number;
+  kapest?: number;
+  soli?: number;
+  kist?: number;
+  /** Auszahlungsbetrag nach Steuern */
+  net?: number;
+  freigestellt?: boolean;
+  /** KiSt-Satz in %: 0, 8 oder 9 */
+  kistRate?: number;
+}
 export interface DividendRun {
   id: string;
   fiscalYear: number;
   ratePercent: number;
   createdAt: string;
   createdBy: string;
-  items: { memberId: string; lotId: string; days: number; amount: number }[];
+  items: DividendItem[];
   totalAmount: number;
+  /** Aggregierte Steuer-Summen über den Lauf */
+  totals?: {
+    gross: number;
+    kapest: number;
+    soli: number;
+    kist: number;
+    net: number;
+  };
+  /** Map: memberId -> documentId der erzeugten Steuerbescheinigung */
+  certificates?: Record<string, string>;
 }
 
 export interface AuditEntry {
