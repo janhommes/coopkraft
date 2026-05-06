@@ -28,6 +28,24 @@ export async function uploadDocument(
   return rec;
 }
 
+/** Speichert ein systemgeneriertes Dokument (z. B. Bescheinigung) ohne Audit-Eintrag pro Datei. */
+export async function saveGeneratedDocument(
+  meta: Omit<DocumentRecord, "id" | "uploadedAt" | "uploadedBy" | "size">,
+  blob: Blob,
+  user: AppUser,
+): Promise<DocumentRecord> {
+  const rec: DocumentRecord = {
+    ...meta,
+    id: uid(),
+    size: blob.size,
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: user.name,
+  };
+  await put("documents", rec);
+  await put("documentFiles", { id: rec.id, blob });
+  return rec;
+}
+
 export async function deleteDocument(id: string, user: AppUser): Promise<void> {
   const doc = await getDocument(id);
   await del("documents", id);
