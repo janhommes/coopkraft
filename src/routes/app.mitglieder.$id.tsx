@@ -60,6 +60,7 @@ function MemberDetailPage() {
   const auditQ = useQuery({ queryKey: ["audit", id], queryFn: () => listAudit(id) });
   const wfQ = useQuery({ queryKey: ["workflow"], queryFn: getWorkflow });
   const settingsQ = useQuery({ queryKey: ["settings"], queryFn: getSettings });
+  const allMembersQ = useQuery({ queryKey: ["members"], queryFn: async () => (await import("@/services/members.service")).listMembers() });
 
   const m = memberQ.data;
   if (!m || !user) return <div className="p-6 text-muted-foreground">Lade…</div>;
@@ -68,7 +69,7 @@ function MemberDetailPage() {
   const myApprovals = (apprQ.data ?? []).filter((a) => a.memberId === id);
   const myPayments = (payQ.data ?? []).filter((p) => p.memberId === id);
   const myTerminations = (termQ.data ?? []).filter((t) => t.memberId === id);
-  const allMembers = useQuery({ queryKey: ["members"], queryFn: async () => (await import("@/services/members.service")).listMembers() }).data ?? [];
+  const allMembers = allMembersQ.data ?? [];
 
   const wf = wfQ.data;
   const confirms = myApprovals.filter((a) => a.role === "mitgliedsbestaetiger" && a.decision === "approve").length;
