@@ -13,6 +13,7 @@ function AnmeldungPage() {
   const showLogo = settings?.signup?.showLogo ?? true;
   const intro = settings?.signup?.intro;
   const customCss = settings?.signup?.customCss;
+  const title = settings?.signup?.title || "Mitglied werden";
   return (
     <div className="signup-page min-h-screen bg-muted/30">
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
@@ -22,7 +23,7 @@ function AnmeldungPage() {
         </header>
       )}
       <main className="mx-auto max-w-3xl px-4 py-10 md:py-16">
-        <h1 className="signup-title text-3xl font-bold tracking-tight">Mitglied werden</h1>
+        <h1 className="signup-title text-3xl font-bold tracking-tight">{title}</h1>
         {intro && (
           <div className="signup-intro mt-2 whitespace-pre-line text-muted-foreground">{intro}</div>
         )}
