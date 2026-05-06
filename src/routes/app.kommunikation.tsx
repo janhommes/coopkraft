@@ -439,3 +439,54 @@ function extractBodyFromRendered(html: string): string {
   const m = html.match(/<tr><td style="padding:24px;[^"]*">([\s\S]*?)<\/td><\/tr>\s*<tr><td>/);
   return (m ? m[1] : html).trim();
 }
+
+/** Convert ISO timestamp to value usable in <input type="datetime-local"> */
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toIcsDate(input: string): string {
+  const d = new Date(input);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+}
+
+function escapeIcs(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+
+export function buildIcs(opts: { title: string; start: string; end?: string; location?: string; description?: string }): string {
+  const start = toIcsDate(opts.start);
+  const end = toIcsDate(opts.end || new Date(new Date(opts.start).getTime() + 60 * 60 * 1000).toISOString());
+  const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@genossenschaft`;
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Genossenschaft//Newsletter//DE",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${escapeIcs(opts.title)}`,
+    opts.location ? `LOCATION:${escapeIcs(opts.location)}` : "",
+    opts.description ? `DESCRIPTION:${escapeIcs(opts.description)}` : "",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].filter(Boolean).join("\r\n");
+}
+
+function downloadIcs(opts: { title: string; start: string; end?: string; location?: string; description?: string }): void {
+  if (!opts.title || !opts.start) return;
+  const ics = buildIcs(opts);
+  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${opts.title.replace(/[^\w-]+/g, "_") || "termin"}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
