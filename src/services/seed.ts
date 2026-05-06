@@ -15,6 +15,8 @@ const defaultSettings: Settings = {
   genossenschaftsName: "Demo Energie eG",
   primary: "#2e7d32",
   accent: "#f5a524",
+  background: "#ffffff",
+  sidebarBackground: "#f7f7f5",
   anteilsWert: 100,
   minAnteile: 1,
   maxAnteile: 100,
@@ -28,6 +30,13 @@ const defaultSettings: Settings = {
   laenderReihenfolge: ["DE", "AT", "CH"],
   defaultLand: "DE",
   fiscalYearEndMonth: 12,
+  signup: {
+    intro:
+      "Werde Teil unserer Energiegenossenschaft und gestalte die Energiewende vor Ort mit.\n\nDie Mitgliedschaft wird nach Eingang der erforderlichen Bestätigungen und deines Anteilsbeitrags aktiv.",
+    showLogo: true,
+    layout: "stepper",
+    customCss: "",
+  },
 };
 
 const defaultWorkflow: WorkflowConfig = {
