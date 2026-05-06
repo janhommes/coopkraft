@@ -15,8 +15,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useBranding } from "@/components/providers/BrandingProvider";
 import { buildBrandedFooter, buildBrandedHeader, renderNewsletterHtml } from "@/lib/newsletter";
 import { formatDate } from "@/lib/locale";
-import type { Campaign, CampaignType, Member } from "@/lib/types";
-import { Bold, Italic, Heading2, List, ListOrdered, Link2, Image as ImageIcon, Quote, Minus, Trash2, Pencil, Search, X } from "lucide-react";
+import type { Campaign, Member } from "@/lib/types";
+import { Bold, Italic, Heading2, List, ListOrdered, Link2, Image as ImageIcon, Quote, Minus, Trash2, Pencil, Search, X, Calendar, Download } from "lucide-react";
 
 export const Route = createFileRoute("/app/kommunikation")({
   component: KommPage,
@@ -37,9 +37,14 @@ function KommPage() {
   const qc = useQueryClient();
   const camps = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
   const members = useQuery({ queryKey: ["members"], queryFn: listMembers });
-  const [type, setType] = useState<CampaignType>("newsletter");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [eventEnabled, setEventEnabled] = useState(false);
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventStart, setEventStart] = useState("");
+  const [eventEnd, setEventEnd] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
   const [audienceMode, setAudienceMode] = useState<"newsletter" | "all" | "custom">("newsletter");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
@@ -111,15 +116,26 @@ function KommPage() {
 
   const resetForm = () => {
     setEditingId(null);
-    setSubject(""); setBody(""); setType("newsletter");
+    setSubject(""); setBody("");
+    setEventEnabled(false); setEventTitle(""); setEventStart(""); setEventEnd(""); setEventLocation(""); setEventDescription("");
     setAudienceMode("newsletter"); setSelectedIds([]);
   };
 
   const loadCampaign = (c: Campaign) => {
     setEditingId(c.id);
-    setType(c.type);
     setSubject(c.subject);
     setBody(extractBodyFromRendered(c.bodyHtml));
+    if (c.startsAt || c.endsAt || c.location) {
+      setEventEnabled(true);
+      setEventTitle(c.subject);
+      setEventStart(c.startsAt ? toLocalInput(c.startsAt) : "");
+      setEventEnd(c.endsAt ? toLocalInput(c.endsAt) : "");
+      setEventLocation(c.location ?? "");
+      setEventDescription("");
+    } else {
+      setEventEnabled(false);
+      setEventTitle(""); setEventStart(""); setEventEnd(""); setEventLocation(""); setEventDescription("");
+    }
     if (c.audience.memberIds && c.audience.memberIds.length) {
       setAudienceMode("custom"); setSelectedIds(c.audience.memberIds);
     } else if (c.audience.newsletterOnly) {
@@ -144,13 +160,15 @@ function KommPage() {
     if (!user) return;
     if (!subject) { toast.error("Betreff fehlt"); return; }
     if (audienceMode === "custom" && selectedIds.length === 0) { toast.error("Bitte mindestens ein Mitglied auswählen"); return; }
-    const finalHtml = type === "newsletter"
-      ? renderNewsletterHtml({ subject, bodyHtml: body, branding: settings?.newsletter })
-      : body;
+    if (eventEnabled && (!eventTitle || !eventStart)) { toast.error("Termin: Titel und Start sind erforderlich"); return; }
+    const finalHtml = renderNewsletterHtml({ subject, bodyHtml: body, branding: settings?.newsletter });
     await createCampaign({
-      type,
+      type: "newsletter",
       subject,
       bodyHtml: finalHtml,
+      startsAt: eventEnabled ? new Date(eventStart).toISOString() : undefined,
+      endsAt: eventEnabled && eventEnd ? new Date(eventEnd).toISOString() : undefined,
+      location: eventEnabled ? eventLocation || undefined : undefined,
       audience: {
         newsletterOnly: audienceMode === "newsletter",
         statuses: ["active"],
@@ -185,20 +203,7 @@ function KommPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div>
-              <Label>Typ</Label>
-              <Select value={type} onValueChange={(v) => setType(v as CampaignType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newsletter">Newsletter</SelectItem>
-                  <SelectItem value="termin">Termin</SelectItem>
-                  <SelectItem value="mitteilung">Mitteilung</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div><Label>Betreff</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
-          </div>
+          <div><Label>Betreff</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
 
           <div>
             <Label>Inhalt</Label>
@@ -243,8 +248,38 @@ function KommPage() {
             </p>
           </div>
 
-          {type === "newsletter" && (
-            <div>
+          <div className="space-y-2 rounded border p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Label className="m-0">Termin anhängen (.ics)</Label>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={eventEnabled} onChange={(e) => {
+                  setEventEnabled(e.target.checked);
+                  if (e.target.checked && !eventTitle) setEventTitle(subject);
+                }} />
+                Aktivieren
+              </label>
+            </div>
+            {eventEnabled && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="sm:col-span-2"><Label>Titel</Label><Input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} /></div>
+                <div><Label>Beginn</Label><Input type="datetime-local" value={eventStart} onChange={(e) => setEventStart(e.target.value)} /></div>
+                <div><Label>Ende</Label><Input type="datetime-local" value={eventEnd} onChange={(e) => setEventEnd(e.target.value)} /></div>
+                <div className="sm:col-span-2"><Label>Ort</Label><Input value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} placeholder="z. B. Genossenschaftshaus, Musterstraße 1" /></div>
+                <div className="sm:col-span-2"><Label>Beschreibung (optional)</Label><Textarea rows={2} value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} /></div>
+                <div className="sm:col-span-2">
+                  <Button type="button" size="sm" variant="outline" onClick={() => downloadIcs({ title: eventTitle, start: eventStart, end: eventEnd, location: eventLocation, description: eventDescription })}>
+                    <Download className="mr-1 h-4 w-4" /> .ics-Vorschau herunterladen
+                  </Button>
+                  <p className="mt-1 text-xs text-muted-foreground">Die .ics-Datei wird beim Versand als Anhang an alle Empfänger mitgeschickt.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
               <Label>Vorschau</Label>
               <Tabs defaultValue="desktop" className="mt-1.5">
                 <TabsList>
@@ -267,8 +302,7 @@ function KommPage() {
               {previewMember && (
                 <p className="mt-1 text-xs text-muted-foreground">Vorschau-Daten von: {previewMember.vorname} {previewMember.nachname}</p>
               )}
-            </div>
-          )}
+          </div>
 
           <div className="space-y-2 rounded border p-3">
             <Label>Empfänger</Label>
@@ -334,9 +368,13 @@ function KommPage() {
           {(camps.data ?? []).map((c) => (
             <div key={c.id} className="flex items-start justify-between gap-3 rounded border p-3 text-sm">
               <div className="min-w-0 flex-1">
-                <div className="font-medium">{c.subject}</div>
+                <div className="flex items-center gap-2 font-medium">
+                  {c.subject}
+                  {c.startsAt && <Calendar className="h-3.5 w-3.5 text-muted-foreground" />}
+                </div>
                 <div className="text-xs text-muted-foreground">
-                  {c.type} · {formatDate(c.createdAt)} · von {c.createdBy}
+                  {formatDate(c.createdAt)} · von {c.createdBy}
+                  {c.startsAt ? ` · Termin ${formatDate(c.startsAt)}` : ""}
                   {c.audience.memberIds?.length
                     ? ` · ${c.audience.memberIds.length} Empfänger (Auswahl)`
                     : c.audience.newsletterOnly ? " · Newsletter-Opt-In" : " · Alle aktiven"}
@@ -400,4 +438,55 @@ function replacePlaceholders(input: string, m: Member | undefined, genossenschaf
 function extractBodyFromRendered(html: string): string {
   const m = html.match(/<tr><td style="padding:24px;[^"]*">([\s\S]*?)<\/td><\/tr>\s*<tr><td>/);
   return (m ? m[1] : html).trim();
+}
+
+/** Convert ISO timestamp to value usable in <input type="datetime-local"> */
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toIcsDate(input: string): string {
+  const d = new Date(input);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+}
+
+function escapeIcs(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+
+export function buildIcs(opts: { title: string; start: string; end?: string; location?: string; description?: string }): string {
+  const start = toIcsDate(opts.start);
+  const end = toIcsDate(opts.end || new Date(new Date(opts.start).getTime() + 60 * 60 * 1000).toISOString());
+  const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@genossenschaft`;
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Genossenschaft//Newsletter//DE",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${escapeIcs(opts.title)}`,
+    opts.location ? `LOCATION:${escapeIcs(opts.location)}` : "",
+    opts.description ? `DESCRIPTION:${escapeIcs(opts.description)}` : "",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].filter(Boolean).join("\r\n");
+}
+
+function downloadIcs(opts: { title: string; start: string; end?: string; location?: string; description?: string }): void {
+  if (!opts.title || !opts.start) return;
+  const ics = buildIcs(opts);
+  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${opts.title.replace(/[^\w-]+/g, "_") || "termin"}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
