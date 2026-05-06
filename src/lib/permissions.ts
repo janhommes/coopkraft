@@ -22,6 +22,7 @@ export type Action =
   | "run:sepa"
   | "manage:transfers"
   | "approve:termination"
+  | "delete:member"
   | "manage:admin";
 
 export function can(user: AppUser | null, action: Action): boolean {
@@ -61,6 +62,8 @@ export function can(user: AppUser | null, action: Action): boolean {
       return hasAnyRole(user, ["mitgliederverwalter", "vorstand"]);
     case "approve:termination":
       return hasAnyRole(user, ["mitgliederverwalter", "vorstand"]);
+    case "delete:member":
+      return false; // nur Admin (oben abgefangen)
     case "manage:admin":
       return false;
   }
