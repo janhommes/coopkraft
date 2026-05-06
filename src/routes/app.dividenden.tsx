@@ -15,14 +15,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Link } from "@tanstack/react-router";
-import { Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Trash2, ChevronDown, ChevronRight, FileText, AlertTriangle } from "lucide-react";
 import {
   listDividendRuns,
   createDividendRun,
   aggregateByMember,
   deleteDividendRun,
+  applyTaxes,
 } from "@/services/dividends.service";
 import { listMembers } from "@/services/members.service";
+import { downloadDocument } from "@/services/documents.service";
+import { getSettings } from "@/services/settings.service";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { formatEuro, formatDate } from "@/lib/locale";
 import type { DividendRun, Member } from "@/lib/types";
@@ -36,18 +39,33 @@ function DivPage() {
   const qc = useQueryClient();
   const runs = useQuery({ queryKey: ["dividends"], queryFn: listDividendRuns });
   const membersQ = useQuery({ queryKey: ["members"], queryFn: listMembers });
+  const settingsQ = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const [year, setYear] = useState(new Date().getFullYear() - 1);
   const [rate, setRate] = useState(2);
   const [agg, setAgg] = useState<Awaited<ReturnType<typeof aggregateByMember>> | null>(null);
+  const [busy, setBusy] = useState(false);
   const [openRunId, setOpenRunId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<DividendRun | null>(null);
 
+  const stammdatenOk = !!settingsQ.data?.genossenschaft?.name && !!settingsQ.data?.genossenschaft?.strasse;
+
   const create = async () => {
     if (!user) return;
+    setBusy(true);
+    const t = toast.loading("Berechne Lauf und erzeuge Bescheinigungen…");
+    try {
     const run = await createDividendRun(year, rate, user);
     setAgg(await aggregateByMember(run.items));
     qc.invalidateQueries();
-    toast.success(`Dividendenlauf erstellt: ${formatEuro(run.totalAmount)}`);
+      toast.success(
+        `Lauf erstellt: Brutto ${formatEuro(run.totals?.gross ?? run.totalAmount)} · Netto ${formatEuro(run.totals?.net ?? run.totalAmount)} · ${Object.keys(run.certificates ?? {}).length} Bescheinigungen`,
+        { id: t },
+      );
+    } catch (e) {
+      toast.error((e as Error).message, { id: t });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const remove = async () => {
@@ -68,12 +86,21 @@ function DivPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Dividenden</h1>
+      {!stammdatenOk && (
+        <div className="flex items-start gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            Bitte zuerst die <Link to="/app/admin/stammdaten" className="font-medium underline">Stammdaten der Genossenschaft</Link> pflegen –
+            sonst fehlen auf den Steuerbescheinigungen Adresse und Steuernummer des Ausstellers.
+          </div>
+        </div>
+      )}
       <Card>
         <CardHeader><CardTitle>Neuer Lauf</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap items-end gap-3">
           <div><Label>Geschäftsjahr</Label><Input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} /></div>
           <div><Label>Satz (%)</Label><Input type="number" step="0.1" value={rate} onChange={(e) => setRate(Number(e.target.value))} /></div>
-          <Button onClick={create}>Berechnen & speichern</Button>
+          <Button onClick={create} disabled={busy}>{busy ? "Erstelle…" : "Berechnen & speichern"}</Button>
         </CardContent>
       </Card>
       {agg && (
