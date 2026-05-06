@@ -587,3 +587,69 @@ function DocumentsTab({ memberId, docs, canManage, isSelf, onChange }: { memberI
     </div>
   );
 }
+
+function SubscribeSharesButton({
+  currentTotal,
+  minAnteile,
+  maxAnteile,
+  valuePerShare,
+  onSubscribe,
+}: {
+  currentTotal: number;
+  minAnteile: number;
+  maxAnteile: number;
+  valuePerShare: number;
+  onSubscribe: (count: number) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const remaining = Math.max(0, maxAnteile - currentTotal);
+  const [count, setCount] = useState(1);
+  const tooMany = count > remaining;
+  const tooFew = count < 1;
+  const disabled = tooMany || tooFew || remaining === 0;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setCount(Math.min(1, remaining) || 1); }}>
+      <DialogTrigger asChild>
+        <Button disabled={remaining === 0} title={remaining === 0 ? `Maximum von ${maxAnteile} Anteilen erreicht` : undefined}>
+          + Weitere Anteile zeichnen
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Weitere Anteile zeichnen</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Bestand: <strong>{currentTotal}</strong> · Maximum pro Mitglied: <strong>{maxAnteile}</strong> · Noch möglich: <strong>{remaining}</strong>
+          </p>
+          <div>
+            <Label>Anzahl neu zu zeichnender Anteile</Label>
+            <Input
+              type="number"
+              min={1}
+              max={remaining}
+              value={count}
+              onChange={(e) => setCount(Number(e.target.value) || 0)}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Wert pro Anteil: {formatEuro(valuePerShare)} · Summe: <strong>{formatEuro((Number.isFinite(count) ? count : 0) * valuePerShare)}</strong>
+            </p>
+            {tooMany && <p className="mt-1 text-xs text-destructive">Maximum von {maxAnteile} Anteilen würde überschritten ({currentTotal} + {count} {">"} {maxAnteile}).</p>}
+            {tooFew && <p className="mt-1 text-xs text-destructive">Mindestens 1 Anteil zeichnen.</p>}
+            {minAnteile > 1 && currentTotal === 0 && <p className="mt-1 text-xs text-muted-foreground">Hinweis: Mindestbestand laut Satzung: {minAnteile}.</p>}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Abbrechen</Button>
+          <Button
+            disabled={disabled}
+            onClick={async () => {
+              if (currentTotal + count > maxAnteile) { toast.error(`Maximum von ${maxAnteile} Anteilen würde überschritten`); return; }
+              await onSubscribe(count);
+              setOpen(false);
+            }}
+          >Zeichnen</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
