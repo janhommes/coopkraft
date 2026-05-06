@@ -326,6 +326,7 @@ function MemberDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
     </div>
   );
 }
