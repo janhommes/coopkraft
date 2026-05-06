@@ -33,6 +33,7 @@ import {
   listTransfers,
   rejectTransfer,
   requestTransfer,
+  activeShareCount,
 } from "@/services/shares.service";
 import { listAudit } from "@/services/audit.service";
 import { listDocuments, uploadDocument, deleteDocument, downloadDocument } from "@/services/documents.service";
@@ -161,6 +162,7 @@ function MemberDetailPage() {
                           lotCount={l.count}
                           status={l.status}
                           allMembers={allMembers}
+                          maxAnteile={settingsQ.data?.maxAnteile ?? 0}
                           onAction={() => qc.invalidateQueries()}
                         />
                       </td>
