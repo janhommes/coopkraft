@@ -14,9 +14,22 @@ import { Route as AnmeldungRouteImport } from './routes/anmeldung'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmbedAnmeldungRouteImport } from './routes/embed.anmeldung'
 import { Route as DokumenteSlugRouteImport } from './routes/dokumente.$slug'
+import { Route as AppSepaRouteImport } from './routes/app.sepa'
+import { Route as AppKommunikationRouteImport } from './routes/app.kommunikation'
+import { Route as AppDokumenteRouteImport } from './routes/app.dokumente'
+import { Route as AppDividendenRouteImport } from './routes/app.dividenden'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppAnteileRouteImport } from './routes/app.anteile'
+import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppMitgliederIndexRouteImport } from './routes/app.mitglieder.index'
+import { Route as AppMitgliederNeuRouteImport } from './routes/app.mitglieder.neu'
 import { Route as AppMitgliederIdRouteImport } from './routes/app.mitglieder.$id'
+import { Route as AppAdminWorkflowRouteImport } from './routes/app.admin.workflow'
+import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
+import { Route as AppAdminKontoRouteImport } from './routes/app.admin.konto'
+import { Route as AppAdminFelderRouteImport } from './routes/app.admin.felder'
+import { Route as AppAdminBrandingRouteImport } from './routes/app.admin.branding'
+import { Route as AppAdminAnteileRouteImport } from './routes/app.admin.anteile'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -43,9 +56,39 @@ const DokumenteSlugRoute = DokumenteSlugRouteImport.update({
   path: '/dokumente/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSepaRoute = AppSepaRouteImport.update({
+  id: '/sepa',
+  path: '/sepa',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppKommunikationRoute = AppKommunikationRouteImport.update({
+  id: '/kommunikation',
+  path: '/kommunikation',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDokumenteRoute = AppDokumenteRouteImport.update({
+  id: '/dokumente',
+  path: '/dokumente',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDividendenRoute = AppDividendenRouteImport.update({
+  id: '/dividenden',
+  path: '/dividenden',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnteileRoute = AppAnteileRouteImport.update({
+  id: '/anteile',
+  path: '/anteile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMitgliederIndexRoute = AppMitgliederIndexRouteImport.update({
@@ -53,30 +96,91 @@ const AppMitgliederIndexRoute = AppMitgliederIndexRouteImport.update({
   path: '/mitglieder/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMitgliederNeuRoute = AppMitgliederNeuRouteImport.update({
+  id: '/mitglieder/neu',
+  path: '/mitglieder/neu',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMitgliederIdRoute = AppMitgliederIdRouteImport.update({
   id: '/mitglieder/$id',
   path: '/mitglieder/$id',
   getParentRoute: () => AppRoute,
+} as any)
+const AppAdminWorkflowRoute = AppAdminWorkflowRouteImport.update({
+  id: '/workflow',
+  path: '/workflow',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminKontoRoute = AppAdminKontoRouteImport.update({
+  id: '/konto',
+  path: '/konto',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminFelderRoute = AppAdminFelderRouteImport.update({
+  id: '/felder',
+  path: '/felder',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminBrandingRoute = AppAdminBrandingRouteImport.update({
+  id: '/branding',
+  path: '/branding',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminAnteileRoute = AppAdminAnteileRouteImport.update({
+  id: '/anteile',
+  path: '/anteile',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anmeldung': typeof AnmeldungRoute
   '/app': typeof AppRouteWithChildren
+  '/app/admin': typeof AppAdminRouteWithChildren
+  '/app/anteile': typeof AppAnteileRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/dividenden': typeof AppDividendenRoute
+  '/app/dokumente': typeof AppDokumenteRoute
+  '/app/kommunikation': typeof AppKommunikationRoute
+  '/app/sepa': typeof AppSepaRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/admin/anteile': typeof AppAdminAnteileRoute
+  '/app/admin/branding': typeof AppAdminBrandingRoute
+  '/app/admin/felder': typeof AppAdminFelderRoute
+  '/app/admin/konto': typeof AppAdminKontoRoute
+  '/app/admin/users': typeof AppAdminUsersRoute
+  '/app/admin/workflow': typeof AppAdminWorkflowRoute
   '/app/mitglieder/$id': typeof AppMitgliederIdRoute
+  '/app/mitglieder/neu': typeof AppMitgliederNeuRoute
   '/app/mitglieder/': typeof AppMitgliederIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anmeldung': typeof AnmeldungRoute
   '/app': typeof AppRouteWithChildren
+  '/app/admin': typeof AppAdminRouteWithChildren
+  '/app/anteile': typeof AppAnteileRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/dividenden': typeof AppDividendenRoute
+  '/app/dokumente': typeof AppDokumenteRoute
+  '/app/kommunikation': typeof AppKommunikationRoute
+  '/app/sepa': typeof AppSepaRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/admin/anteile': typeof AppAdminAnteileRoute
+  '/app/admin/branding': typeof AppAdminBrandingRoute
+  '/app/admin/felder': typeof AppAdminFelderRoute
+  '/app/admin/konto': typeof AppAdminKontoRoute
+  '/app/admin/users': typeof AppAdminUsersRoute
+  '/app/admin/workflow': typeof AppAdminWorkflowRoute
   '/app/mitglieder/$id': typeof AppMitgliederIdRoute
+  '/app/mitglieder/neu': typeof AppMitgliederNeuRoute
   '/app/mitglieder': typeof AppMitgliederIndexRoute
 }
 export interface FileRoutesById {
@@ -84,10 +188,23 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/anmeldung': typeof AnmeldungRoute
   '/app': typeof AppRouteWithChildren
+  '/app/admin': typeof AppAdminRouteWithChildren
+  '/app/anteile': typeof AppAnteileRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/dividenden': typeof AppDividendenRoute
+  '/app/dokumente': typeof AppDokumenteRoute
+  '/app/kommunikation': typeof AppKommunikationRoute
+  '/app/sepa': typeof AppSepaRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/admin/anteile': typeof AppAdminAnteileRoute
+  '/app/admin/branding': typeof AppAdminBrandingRoute
+  '/app/admin/felder': typeof AppAdminFelderRoute
+  '/app/admin/konto': typeof AppAdminKontoRoute
+  '/app/admin/users': typeof AppAdminUsersRoute
+  '/app/admin/workflow': typeof AppAdminWorkflowRoute
   '/app/mitglieder/$id': typeof AppMitgliederIdRoute
+  '/app/mitglieder/neu': typeof AppMitgliederNeuRoute
   '/app/mitglieder/': typeof AppMitgliederIndexRoute
 }
 export interface FileRouteTypes {
@@ -96,30 +213,69 @@ export interface FileRouteTypes {
     | '/'
     | '/anmeldung'
     | '/app'
+    | '/app/admin'
+    | '/app/anteile'
     | '/app/dashboard'
+    | '/app/dividenden'
+    | '/app/dokumente'
+    | '/app/kommunikation'
+    | '/app/sepa'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/admin/anteile'
+    | '/app/admin/branding'
+    | '/app/admin/felder'
+    | '/app/admin/konto'
+    | '/app/admin/users'
+    | '/app/admin/workflow'
     | '/app/mitglieder/$id'
+    | '/app/mitglieder/neu'
     | '/app/mitglieder/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/anmeldung'
     | '/app'
+    | '/app/admin'
+    | '/app/anteile'
     | '/app/dashboard'
+    | '/app/dividenden'
+    | '/app/dokumente'
+    | '/app/kommunikation'
+    | '/app/sepa'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/admin/anteile'
+    | '/app/admin/branding'
+    | '/app/admin/felder'
+    | '/app/admin/konto'
+    | '/app/admin/users'
+    | '/app/admin/workflow'
     | '/app/mitglieder/$id'
+    | '/app/mitglieder/neu'
     | '/app/mitglieder'
   id:
     | '__root__'
     | '/'
     | '/anmeldung'
     | '/app'
+    | '/app/admin'
+    | '/app/anteile'
     | '/app/dashboard'
+    | '/app/dividenden'
+    | '/app/dokumente'
+    | '/app/kommunikation'
+    | '/app/sepa'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/admin/anteile'
+    | '/app/admin/branding'
+    | '/app/admin/felder'
+    | '/app/admin/konto'
+    | '/app/admin/users'
+    | '/app/admin/workflow'
     | '/app/mitglieder/$id'
+    | '/app/mitglieder/neu'
     | '/app/mitglieder/'
   fileRoutesById: FileRoutesById
 }
@@ -168,11 +324,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DokumenteSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/sepa': {
+      id: '/app/sepa'
+      path: '/sepa'
+      fullPath: '/app/sepa'
+      preLoaderRoute: typeof AppSepaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/kommunikation': {
+      id: '/app/kommunikation'
+      path: '/kommunikation'
+      fullPath: '/app/kommunikation'
+      preLoaderRoute: typeof AppKommunikationRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/dokumente': {
+      id: '/app/dokumente'
+      path: '/dokumente'
+      fullPath: '/app/dokumente'
+      preLoaderRoute: typeof AppDokumenteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/dividenden': {
+      id: '/app/dividenden'
+      path: '/dividenden'
+      fullPath: '/app/dividenden'
+      preLoaderRoute: typeof AppDividendenRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/dashboard': {
       id: '/app/dashboard'
       path: '/dashboard'
       fullPath: '/app/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/anteile': {
+      id: '/app/anteile'
+      path: '/anteile'
+      fullPath: '/app/anteile'
+      preLoaderRoute: typeof AppAnteileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/mitglieder/': {
@@ -182,6 +380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMitgliederIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/mitglieder/neu': {
+      id: '/app/mitglieder/neu'
+      path: '/mitglieder/neu'
+      fullPath: '/app/mitglieder/neu'
+      preLoaderRoute: typeof AppMitgliederNeuRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/mitglieder/$id': {
       id: '/app/mitglieder/$id'
       path: '/mitglieder/$id'
@@ -189,18 +394,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMitgliederIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/workflow': {
+      id: '/app/admin/workflow'
+      path: '/workflow'
+      fullPath: '/app/admin/workflow'
+      preLoaderRoute: typeof AppAdminWorkflowRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/users': {
+      id: '/app/admin/users'
+      path: '/users'
+      fullPath: '/app/admin/users'
+      preLoaderRoute: typeof AppAdminUsersRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/konto': {
+      id: '/app/admin/konto'
+      path: '/konto'
+      fullPath: '/app/admin/konto'
+      preLoaderRoute: typeof AppAdminKontoRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/felder': {
+      id: '/app/admin/felder'
+      path: '/felder'
+      fullPath: '/app/admin/felder'
+      preLoaderRoute: typeof AppAdminFelderRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/branding': {
+      id: '/app/admin/branding'
+      path: '/branding'
+      fullPath: '/app/admin/branding'
+      preLoaderRoute: typeof AppAdminBrandingRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/anteile': {
+      id: '/app/admin/anteile'
+      path: '/anteile'
+      fullPath: '/app/admin/anteile'
+      preLoaderRoute: typeof AppAdminAnteileRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminAnteileRoute: typeof AppAdminAnteileRoute
+  AppAdminBrandingRoute: typeof AppAdminBrandingRoute
+  AppAdminFelderRoute: typeof AppAdminFelderRoute
+  AppAdminKontoRoute: typeof AppAdminKontoRoute
+  AppAdminUsersRoute: typeof AppAdminUsersRoute
+  AppAdminWorkflowRoute: typeof AppAdminWorkflowRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminAnteileRoute: AppAdminAnteileRoute,
+  AppAdminBrandingRoute: AppAdminBrandingRoute,
+  AppAdminFelderRoute: AppAdminFelderRoute,
+  AppAdminKontoRoute: AppAdminKontoRoute,
+  AppAdminUsersRoute: AppAdminUsersRoute,
+  AppAdminWorkflowRoute: AppAdminWorkflowRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRouteWithChildren
+  AppAnteileRoute: typeof AppAnteileRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDividendenRoute: typeof AppDividendenRoute
+  AppDokumenteRoute: typeof AppDokumenteRoute
+  AppKommunikationRoute: typeof AppKommunikationRoute
+  AppSepaRoute: typeof AppSepaRoute
   AppMitgliederIdRoute: typeof AppMitgliederIdRoute
+  AppMitgliederNeuRoute: typeof AppMitgliederNeuRoute
   AppMitgliederIndexRoute: typeof AppMitgliederIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRouteWithChildren,
+  AppAnteileRoute: AppAnteileRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDividendenRoute: AppDividendenRoute,
+  AppDokumenteRoute: AppDokumenteRoute,
+  AppKommunikationRoute: AppKommunikationRoute,
+  AppSepaRoute: AppSepaRoute,
   AppMitgliederIdRoute: AppMitgliederIdRoute,
+  AppMitgliederNeuRoute: AppMitgliederNeuRoute,
   AppMitgliederIndexRoute: AppMitgliederIndexRoute,
 }
 
