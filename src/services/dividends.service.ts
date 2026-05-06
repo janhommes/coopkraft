@@ -125,9 +125,9 @@ export async function createDividendRun(
         fiscalYear,
         ratePercent,
         lots: lotLines,
-        aussteller: settings.genossenschaft,
-        ausstellerName: settings.genossenschaft?.name || settings.genossenschaftsName,
-        logoDataUrl: settings.logoDataUrl,
+        aussteller: settings?.genossenschaft,
+        ausstellerName: settings?.genossenschaft?.name || settings?.genossenschaftsName || "Genossenschaft",
+        logoDataUrl: settings?.logoDataUrl,
       });
       const fileName = `Steuerbescheinigung_${fiscalYear}_${member.mitgliedsnummer}.pdf`;
       const rec = await saveGeneratedDocument(
