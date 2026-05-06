@@ -307,6 +307,48 @@ function MemberDetailPage() {
           )}
         </TabsContent>
 
+        <TabsContent value="dividenden" className="mt-4">
+          <Card>
+            <CardContent className="p-4 text-sm">
+              {(divQ.data ?? []).length === 0 ? (
+                <p className="text-muted-foreground">Noch keine Dividenden ausgeschüttet.</p>
+              ) : (
+                <>
+                  <div className="mb-3 flex items-center justify-between border-b pb-2">
+                    <span className="font-medium">Insgesamt erhalten</span>
+                    <span className="font-semibold">
+                      {formatEuro((divQ.data ?? []).reduce((s, d) => s + d.total, 0))}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {(divQ.data ?? []).map((d) => (
+                      <div key={d.run.id} className="rounded border p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">GJ {d.run.fiscalYear} · {d.run.ratePercent}%</div>
+                            <div className="text-xs text-muted-foreground">
+                              Lauf vom {formatDate(d.run.createdAt)} · {d.items.length} Lot(s)
+                            </div>
+                          </div>
+                          <div className="text-right font-semibold">{formatEuro(d.total)}</div>
+                        </div>
+                        <div className="mt-2 space-y-1 border-t pt-2 text-xs text-muted-foreground">
+                          {d.items.map((it, idx) => (
+                            <div key={idx} className="flex justify-between">
+                              <span>Lot {it.lotId.slice(0, 6)} · {it.days} Tage</span>
+                              <span>{formatEuro(it.amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="audit" className="mt-4">
           <Card>
             <CardContent className="space-y-1 p-4 text-sm">
