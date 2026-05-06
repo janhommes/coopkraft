@@ -1,4 +1,5 @@
 import type { NewsletterBranding } from "./types";
+import type { Settings } from "./types";
 
 export const defaultNewsletterBranding: Required<NewsletterBranding> = {
   headerHtml: "",
@@ -49,4 +50,26 @@ export function renderNewsletterHtml(opts: {
 
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
+/**
+ * Builds a header HTML block from the global Settings (logo + name + accent color).
+ */
+export function buildBrandedHeader(settings: Pick<Settings, "genossenschaftsName" | "logoDataUrl" | "primary"> | undefined): string {
+  const name = escapeHtml(settings?.genossenschaftsName ?? "");
+  const bg = settings?.primary ?? "#2e7d32";
+  const logo = settings?.logoDataUrl
+    ? `<img src="${settings.logoDataUrl}" alt="${name}" style="max-height:60px;max-width:220px;display:block;margin:0 auto 8px;" />`
+    : "";
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="background:${bg};color:#ffffff;padding:24px;text-align:center;font-family:Arial,sans-serif;"><tr><td>${logo}<h1 style="margin:0;font-size:22px;font-weight:600;color:#ffffff;">${name}</h1><p style="margin:6px 0 0;font-size:13px;opacity:0.9;">Newsletter</p></td></tr></table>`;
+}
+
+/**
+ * Builds a footer HTML block from the global Settings (name + bank/legal lines + unsubscribe).
+ */
+export function buildBrandedFooter(settings: Pick<Settings, "genossenschaftsName" | "primary" | "bank"> | undefined): string {
+  const name = escapeHtml(settings?.genossenschaftsName ?? "");
+  const accent = settings?.primary ?? "#2e7d32";
+  const inhaber = escapeHtml(settings?.bank?.kontoinhaber ?? name);
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f0;color:#555;padding:20px;text-align:center;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;"><tr><td><strong>${name}</strong><br/>${inhaber}<br/>Du erhältst diese Mail, weil du Mitglied bist oder den Newsletter abonniert hast.<br/><a href="{{unsubscribe_url}}" style="color:${accent};">Vom Newsletter abmelden</a></td></tr></table>`;
 }

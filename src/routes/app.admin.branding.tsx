@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getSettings, saveSettings } from "@/services/settings.service";
 import type { NewsletterBranding, SignupBranding } from "@/lib/types";
-import { mergeNewsletterBranding, renderNewsletterHtml } from "@/lib/newsletter";
+import { buildBrandedFooter, buildBrandedHeader, mergeNewsletterBranding, renderNewsletterHtml } from "@/lib/newsletter";
 
 export const Route = createFileRoute("/app/admin/branding")({
   component: BrandingAdmin,
@@ -210,18 +210,32 @@ function BrandingAdmin() {
 
       <EmbedCard />
 
-      <NewsletterBrandingCard value={newsletter} onChange={setNewsletter} />
+      <NewsletterBrandingCard
+        value={newsletter}
+        onChange={setNewsletter}
+        previewSettings={{ genossenschaftsName: name, logoDataUrl: logo, primary, bank: q.data?.bank }}
+      />
     </div>
   );
 }
 
-function NewsletterBrandingCard({ value, onChange }: { value: Required<NewsletterBranding>; onChange: (v: Required<NewsletterBranding>) => void }) {
+function NewsletterBrandingCard({
+  value,
+  onChange,
+  previewSettings,
+}: {
+  value: Required<NewsletterBranding>;
+  onChange: (v: Required<NewsletterBranding>) => void;
+  previewSettings: { genossenschaftsName: string; logoDataUrl?: string; primary: string; bank?: import("@/lib/types").Settings["bank"] };
+}) {
   const set = <K extends keyof Required<NewsletterBranding>>(k: K, v: Required<NewsletterBranding>[K]) => onChange({ ...value, [k]: v });
   const previewHtml = renderNewsletterHtml({
     subject: "Vorschau",
     bodyHtml: '<p>Hallo,</p><p>so sieht euer Newsletter mit dem aktuellen Header und Footer aus. Inhalte aus dem Newsletter-Editor erscheinen genau hier.</p><p><a href="#">Beispiel-Link</a></p>',
     branding: value,
   });
+  const generateHeader = () => set("headerHtml", buildBrandedHeader(previewSettings as never));
+  const generateFooter = () => set("footerHtml", buildBrandedFooter(previewSettings as never));
   return (
     <Card>
       <CardHeader><CardTitle>Newsletter-Branding</CardTitle></CardHeader>
@@ -233,14 +247,20 @@ function NewsletterBrandingCard({ value, onChange }: { value: Required<Newslette
           <ColorField label="Akzentfarbe (Links/Buttons)" value={value.accentColor} onChange={(v) => set("accentColor", v)} />
         </div>
         <div>
-          <Label>Header (HTML)</Label>
+          <div className="flex items-center justify-between">
+            <Label>Header (HTML)</Label>
+            <Button type="button" size="sm" variant="outline" onClick={generateHeader}>Aus Branding generieren</Button>
+          </div>
           <Textarea rows={6} className="font-mono text-xs" value={value.headerHtml} onChange={(e) => set("headerHtml", e.target.value)} />
-          <p className="mt-1 text-xs text-muted-foreground">Wird oben in jeder Newsletter-Mail eingefügt. Inline-Styles verwenden.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Wird oben in jeder Newsletter-Mail eingefügt. Über „Aus Branding generieren“ wird automatisch ein Header mit Logo, Namen und Primärfarbe erzeugt.</p>
         </div>
         <div>
-          <Label>Footer (HTML)</Label>
+          <div className="flex items-center justify-between">
+            <Label>Footer (HTML)</Label>
+            <Button type="button" size="sm" variant="outline" onClick={generateFooter}>Aus Branding generieren</Button>
+          </div>
           <Textarea rows={6} className="font-mono text-xs" value={value.footerHtml} onChange={(e) => set("footerHtml", e.target.value)} />
-          <p className="mt-1 text-xs text-muted-foreground">Wird unten in jeder Newsletter-Mail eingefügt – z. B. Adresse &amp; Abmelde-Link.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Wird unten in jeder Newsletter-Mail eingefügt. Platzhalter <code>{`{{unsubscribe_url}}`}</code> wird beim Versand ersetzt.</p>
         </div>
         <div>
           <Label>Vorschau</Label>

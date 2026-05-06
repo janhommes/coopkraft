@@ -13,7 +13,7 @@ import { listCampaigns, createCampaign } from "@/services/campaigns.service";
 import { listMembers } from "@/services/members.service";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useBranding } from "@/components/providers/BrandingProvider";
-import { renderNewsletterHtml } from "@/lib/newsletter";
+import { buildBrandedFooter, buildBrandedHeader, renderNewsletterHtml } from "@/lib/newsletter";
 import { formatDate } from "@/lib/locale";
 import type { CampaignType } from "@/lib/types";
 import { Bold, Italic, Heading2, List, ListOrdered, Link2, Image as ImageIcon, Quote, Minus } from "lucide-react";
@@ -73,6 +73,8 @@ function KommPage() {
     const accent = settings?.newsletter?.accentColor ?? "#2e7d32";
     insert(`\n<p style="text-align:center;margin:20px 0;"><a href="${url}" style="background:${accent};color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:6px;display:inline-block;font-weight:600;">${text}</a></p>\n`);
   };
+  const insertBrandedHeader = () => insert(buildBrandedHeader(settings) + "\n");
+  const insertBrandedFooter = () => insert("\n" + buildBrandedFooter(settings));
 
   const send = async () => {
     if (!user) return;
@@ -126,6 +128,9 @@ function KommPage() {
                 <ToolbarBtn title="Link einfügen" onClick={insertLink}><Link2 className="h-4 w-4" /></ToolbarBtn>
                 <ToolbarBtn title="Bild einfügen" onClick={insertImage}><ImageIcon className="h-4 w-4" /></ToolbarBtn>
                 <Button type="button" size="sm" variant="ghost" onClick={insertButton}>+ Button</Button>
+                <span className="mx-1 h-5 w-px bg-border" />
+                <Button type="button" size="sm" variant="ghost" title="Branded Header einfügen" onClick={insertBrandedHeader}>+ Header</Button>
+                <Button type="button" size="sm" variant="ghost" title="Branded Footer einfügen" onClick={insertBrandedFooter}>+ Footer</Button>
               </div>
               <Textarea
                 ref={bodyRef}
