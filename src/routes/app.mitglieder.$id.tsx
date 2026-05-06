@@ -78,6 +78,8 @@ function MemberDetailPage() {
   const settingsQ = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const allMembersQ = useQuery({ queryKey: ["members"], queryFn: async () => (await import("@/services/members.service")).listMembers() });
 
+  const [tab, setTab] = useState("stamm");
+
   const m = memberQ.data;
   if (!m || !user) return <div className="p-6 text-muted-foreground">Lade…</div>;
 
@@ -129,16 +131,39 @@ function MemberDetailPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="stamm">
-        <TabsList>
-          <TabsTrigger value="stamm">Stammdaten</TabsTrigger>
-          <TabsTrigger value="anteile">Anteile ({myLots.length})</TabsTrigger>
-          <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
-          <TabsTrigger value="approvals">Approvals</TabsTrigger>
-          <TabsTrigger value="kuendigung">Kündigung</TabsTrigger>
-          <TabsTrigger value="dividenden">Dividenden ({divQ.data?.length ?? 0})</TabsTrigger>
-          <TabsTrigger value="audit">Audit</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={setTab}>
+        {(() => {
+          const tabs = [
+            { v: "stamm", l: "Stammdaten" },
+            { v: "anteile", l: `Anteile (${myLots.length})` },
+            { v: "dokumente", l: "Dokumente" },
+            { v: "approvals", l: "Approvals" },
+            { v: "kuendigung", l: "Kündigung" },
+            { v: "dividenden", l: `Dividenden (${divQ.data?.length ?? 0})` },
+            { v: "audit", l: "Audit" },
+          ];
+          return (
+            <>
+              <div className="md:hidden">
+                <Select value={tab} onValueChange={setTab}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tabs.map((t) => (
+                      <SelectItem key={t.v} value={t.v}>{t.l}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <TabsList className="hidden md:inline-flex">
+                {tabs.map((t) => (
+                  <TabsTrigger key={t.v} value={t.v}>{t.l}</TabsTrigger>
+                ))}
+              </TabsList>
+            </>
+          );
+        })()}
 
         <TabsContent value="stamm" className="mt-4">
           <StammForm member={m} canEdit={can(user, "edit:member") || isSelf} onSave={async (next) => { await saveMember(next); qc.invalidateQueries(); toast.success("Gespeichert"); }} />
