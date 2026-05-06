@@ -42,7 +42,7 @@ import { getSettings, getWorkflow } from "@/services/settings.service";
 import { calcEffectiveDate } from "@/lib/termination";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { can } from "@/lib/permissions";
-import { formatDate, formatDateTime, formatEuro } from "@/lib/locale";
+import { formatDate, formatDateTime, formatEuro, memberStatusLabel, lotStatusLabel, transferStatusLabel, terminationStatusLabel } from "@/lib/locale";
 import { ROLE_LABELS, type DocCategory, type Member } from "@/lib/types";
 
 export const Route = createFileRoute("/app/mitglieder/$id")({
@@ -109,7 +109,7 @@ function MemberDetailPage() {
           <p className="text-sm text-muted-foreground">Mitgliedsnr. {m.mitgliedsnummer} · {m.email}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline">{m.status}</Badge>
+          <Badge variant="outline">{memberStatusLabel(m.status)}</Badge>
           {can(user, "delete:member") && (
             <Button variant="destructive" size="sm" onClick={onDelete}>
               Mitglied löschen
@@ -154,7 +154,7 @@ function MemberDetailPage() {
                       <td className="p-3">{l.count}</td>
                       <td className="p-3">{formatEuro(l.valuePerShare)}</td>
                       <td className="p-3">{formatEuro(l.count * l.valuePerShare)}</td>
-                      <td className="p-3"><Badge variant="outline">{l.status}</Badge></td>
+                      <td className="p-3"><Badge variant="outline">{lotStatusLabel(l.status)}</Badge></td>
                       <td className="p-3">
                         <LotActions
                           memberId={m.id}
@@ -263,7 +263,7 @@ function MemberDetailPage() {
               {(transQ.data ?? []).filter((t) => t.fromMemberId === m.id || t.toMemberId === m.id).map((t) => (
                 <div key={t.id} className="flex items-center justify-between rounded border p-2 text-sm">
                   <span>
-                    {t.kind === "sale" ? "Verkauf" : "Spende"}: {t.count} Anteile {t.fromMemberId === m.id ? "→" : "←"} ({t.status})
+                    {t.kind === "sale" ? "Verkauf" : "Spende"}: {t.count} Anteile {t.fromMemberId === m.id ? "→" : "←"} ({transferStatusLabel(t.status)})
                   </span>
                   {t.status === "pending" && can(user, "manage:transfers") && (
                     <div className="flex gap-1">
@@ -286,7 +286,7 @@ function MemberDetailPage() {
                   <div key={t.id} className="flex items-center justify-between rounded border p-2 text-sm">
                     <div>
                       <div className="font-medium">{t.target === "membership" ? "Mitgliedschaft" : `Anteile (${t.shareCount})`}</div>
-                      <div className="text-muted-foreground">Wirksam {formatDate(t.effectiveDate)} · Auszahlung {formatDate(t.payoutDate)} · Status {t.status}</div>
+                      <div className="text-muted-foreground">Wirksam {formatDate(t.effectiveDate)} · Auszahlung {formatDate(t.payoutDate)} · Status {terminationStatusLabel(t.status)}</div>
                     </div>
                     {t.status === "pending" && can(user, "approve:termination") && (
                       <div className="flex gap-1">
