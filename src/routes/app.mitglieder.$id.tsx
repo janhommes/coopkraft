@@ -418,28 +418,57 @@ function StammForm({ member, canEdit, onSave }: { member: Member; canEdit: boole
   );
 }
 
-function LotActions({ memberId, lotId, lotCount, status, allMembers, onAction }: {
+function LotActions({ memberId, lotId, lotCount, status, allMembers, maxAnteile, onAction }: {
   memberId: string; lotId: string; lotCount: number; status: string;
-  allMembers: Member[]; onAction: () => void;
+  allMembers: Member[]; maxAnteile: number; onAction: () => void;
 }) {
   const { user } = useAuth();
   const wfQ = useQuery({ queryKey: ["workflow"], queryFn: getWorkflow });
-  const [open, setOpen] = useState<null | "sell" | "donate" | "terminate">(null);
+  const [open, setOpen] = useState<null | "transfer" | "terminate">(null);
   const [toMember, setToMember] = useState("");
   const [count, setCount] = useState(lotCount);
   const [price, setPrice] = useState(0);
+  const [asDonation, setAsDonation] = useState(false);
+  const [recipientCount, setRecipientCount] = useState<number | null>(null);
   if (!user || status !== "active") return null;
+
+  const verkaufErlaubt = wfQ.data?.transfer.verkaufErlaubt ?? false;
+  const spendeErlaubt = wfQ.data?.transfer.spendeErlaubt ?? false;
+  const transferErlaubt = verkaufErlaubt || spendeErlaubt;
+
+  const onPickRecipient = async (id: string) => {
+    setToMember(id);
+    if (!id) { setRecipientCount(null); return; }
+    try {
+      const c = await activeShareCount(id);
+      setRecipientCount(c);
+    } catch {
+      setRecipientCount(null);
+    }
+  };
+
+  const recipientRemaining = recipientCount === null ? null : Math.max(0, maxAnteile - recipientCount);
+  const exceedsRecipientMax = recipientRemaining !== null && count > recipientRemaining;
 
   const submit = async () => {
     try {
-      if (open === "sell" || open === "donate") {
+      if (open === "transfer") {
+        if (!toMember) { toast.error("Empfänger wählen"); return; }
+        const recCount = await activeShareCount(toMember);
+        if (recCount + count > maxAnteile) {
+          toast.error(`Empfänger würde Maximum von ${maxAnteile} Anteilen überschreiten (${recCount} + ${count})`);
+          return;
+        }
+        const kind = asDonation ? "donation" : "sale";
+        if (kind === "sale" && !verkaufErlaubt) { toast.error("Verkauf nicht erlaubt"); return; }
+        if (kind === "donation" && !spendeErlaubt) { toast.error("Spende nicht erlaubt"); return; }
         await requestTransfer({
-          kind: open === "sell" ? "sale" : "donation",
+          kind,
           fromMemberId: memberId,
           fromLotId: lotId,
           toMemberId: toMember,
           count,
-          pricePerShare: open === "donate" ? 0 : price,
+          pricePerShare: asDonation ? 0 : price,
           requestedBy: user.id,
         }, user);
         toast.success("Übertragung beantragt");
@@ -448,6 +477,9 @@ function LotActions({ memberId, lotId, lotCount, status, allMembers, onAction }:
         toast.success("Anteile gekündigt");
       }
       setOpen(null);
+      setToMember("");
+      setRecipientCount(null);
+      setAsDonation(false);
       onAction();
     } catch (e) {
       toast.error((e as Error).message);
@@ -457,20 +489,24 @@ function LotActions({ memberId, lotId, lotCount, status, allMembers, onAction }:
   return (
     <div className="flex gap-1">
       <Button size="sm" variant="ghost" onClick={() => { setOpen("terminate"); setCount(lotCount); }}>Kündigen</Button>
-      {wfQ.data?.transfer.verkaufErlaubt && <Button size="sm" variant="ghost" onClick={() => { setOpen("sell"); setCount(lotCount); }}>Verkaufen</Button>}
-      {wfQ.data?.transfer.spendeErlaubt && <Button size="sm" variant="ghost" onClick={() => { setOpen("donate"); setCount(lotCount); }}>Spenden</Button>}
+      {transferErlaubt && (
+        <Button size="sm" variant="ghost" onClick={() => {
+          setOpen("transfer"); setCount(lotCount); setToMember(""); setRecipientCount(null);
+          setAsDonation(!verkaufErlaubt && spendeErlaubt);
+        }}>Übertragen</Button>
+      )}
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>
-            {open === "sell" ? "Anteile verkaufen" : open === "donate" ? "Anteile spenden" : "Anteile kündigen"}
+            {open === "transfer" ? "Anteile übertragen" : "Anteile kündigen"}
           </DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>Anzahl</Label><Input type="number" min={1} max={lotCount} value={count} onChange={(e) => setCount(Number(e.target.value))} /></div>
-            {(open === "sell" || open === "donate") && (
+            {open === "transfer" && (
               <>
                 <div>
                   <Label>Empfänger</Label>
-                  <Select value={toMember} onValueChange={setToMember}>
+                  <Select value={toMember} onValueChange={onPickRecipient}>
                     <SelectTrigger><SelectValue placeholder="Mitglied wählen" /></SelectTrigger>
                     <SelectContent>
                       {allMembers.filter((x) => x.id !== memberId && x.status === "active").map((x) => (
@@ -478,14 +514,28 @@ function LotActions({ memberId, lotId, lotCount, status, allMembers, onAction }:
                       ))}
                     </SelectContent>
                   </Select>
+                  {recipientCount !== null && (
+                    <p className={`mt-1 text-xs ${exceedsRecipientMax ? "text-destructive" : "text-muted-foreground"}`}>
+                      Empfänger hat aktuell <strong>{recipientCount}</strong> Anteile · Maximum: <strong>{maxAnteile}</strong> · Noch möglich: <strong>{recipientRemaining}</strong>
+                      {exceedsRecipientMax && ` — Übertragung würde Maximum überschreiten.`}
+                    </p>
+                  )}
                 </div>
-                {open === "sell" && <div><Label>Preis pro Anteil</Label><Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} /></div>}
+                {verkaufErlaubt && spendeErlaubt && (
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={asDonation} onChange={(e) => setAsDonation(e.target.checked)} />
+                    Als Spende übertragen (kein Kaufpreis)
+                  </label>
+                )}
+                {!asDonation && verkaufErlaubt && (
+                  <div><Label>Preis pro Anteil</Label><Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} /></div>
+                )}
               </>
             )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(null)}>Abbrechen</Button>
-            <Button onClick={submit}>Bestätigen</Button>
+            <Button onClick={submit} disabled={open === "transfer" && (exceedsRecipientMax || !toMember || count < 1)}>Bestätigen</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
