@@ -43,7 +43,15 @@ import { calcEffectiveDate } from "@/lib/termination";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { can } from "@/lib/permissions";
 import { formatDate, formatDateTime, formatEuro, memberStatusLabel, lotStatusLabel, transferStatusLabel, terminationStatusLabel } from "@/lib/locale";
-import { ROLE_LABELS, type DocCategory, type Member } from "@/lib/types";
+import {
+  ROLE_LABELS,
+  BUNDESLAND_LABELS,
+  KONFESSION_LABELS,
+  type Bundesland,
+  type DocCategory,
+  type Konfession,
+  type Member,
+} from "@/lib/types";
 
 export const Route = createFileRoute("/app/mitglieder/$id")({
   component: MemberDetailPage,
@@ -393,6 +401,7 @@ function Row({ label, ok }: { label: string; ok: boolean }) {
 function StammForm({ member, canEdit, onSave }: { member: Member; canEdit: boolean; onSave: (m: Member) => void | Promise<void> }) {
   const [m, setM] = useState(member);
   return (
+    <div className="space-y-4">
     <Card>
       <CardContent className="grid gap-4 p-6 md:grid-cols-2">
         {([
@@ -412,9 +421,77 @@ function StammForm({ member, canEdit, onSave }: { member: Member; canEdit: boole
             <Input disabled={!canEdit} value={(m[k] as string) ?? ""} onChange={(e) => setM({ ...m, [k]: e.target.value })} />
           </div>
         ))}
-        {canEdit && <div className="md:col-span-2"><Button onClick={() => onSave({ ...m, updatedAt: new Date().toISOString() })}>Speichern</Button></div>}
       </CardContent>
     </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>Steuerliche Angaben</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Bestimmt den Steuerabzug bei der Dividendenausschüttung (Kapitalertragsteuer 25 %, Solidaritätszuschlag 5,5 %, ggf. Kirchensteuer 8/9 %).
+        </p>
+      </CardHeader>
+      <CardContent className="grid gap-4 p-6 md:grid-cols-2">
+        <div className="md:col-span-2 flex items-center gap-2">
+          <input
+            id="freistellung"
+            type="checkbox"
+            disabled={!canEdit}
+            checked={!!m.freistellung}
+            onChange={(e) => setM({ ...m, freistellung: e.target.checked })}
+          />
+          <Label htmlFor="freistellung" className="font-normal">
+            Freistellungsauftrag liegt vor – kein Steuerabzug
+          </Label>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Konfession</Label>
+          <Select
+            disabled={!canEdit || !!m.freistellung}
+            value={m.konfession ?? "keine"}
+            onValueChange={(v) => setM({ ...m, konfession: v as Konfession })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(KONFESSION_LABELS) as Konfession[]).map((k) => (
+                <SelectItem key={k} value={k}>{KONFESSION_LABELS[k]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Bundesland (für Kirchensteuer)</Label>
+          <Select
+            disabled={!canEdit || !!m.freistellung}
+            value={m.bundesland ?? ""}
+            onValueChange={(v) => setM({ ...m, bundesland: v as Bundesland })}
+          >
+            <SelectTrigger><SelectValue placeholder="– bitte wählen –" /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(BUNDESLAND_LABELS) as Bundesland[]).map((b) => (
+                <SelectItem key={b} value={b}>{BUNDESLAND_LABELS[b]} ({b === "BY" || b === "BW" ? "8 %" : "9 %"})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="md:col-span-2 space-y-1.5">
+          <Label>Steuer-Identifikationsnummer (optional)</Label>
+          <Input
+            disabled={!canEdit}
+            value={m.steuerId ?? ""}
+            onChange={(e) => setM({ ...m, steuerId: e.target.value })}
+            placeholder="11 Ziffern"
+          />
+        </div>
+      </CardContent>
+    </Card>
+
+    {canEdit && (
+      <div>
+        <Button onClick={() => onSave({ ...m, updatedAt: new Date().toISOString() })}>Speichern</Button>
+      </div>
+    )}
+    </div>
   );
 }
 
