@@ -6,6 +6,8 @@ export const Route = createFileRoute("/app/admin")({
 
 const items = [
   { to: "/app/admin/branding", label: "Branding" },
+  { to: "/app/admin/anmeldung", label: "Beitrittsformular" },
+  { to: "/app/admin/newsletter", label: "Newsletter" },
   { to: "/app/admin/anteile", label: "Anteile" },
    { to: "/app/admin/felder", label: "Benutzerdefinierte Felder" },
   { to: "/app/admin/konto", label: "Bankkonto" },
