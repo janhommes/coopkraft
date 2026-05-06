@@ -326,3 +326,18 @@ export interface SignupBranding {
   /** Newsletter-Opt-In auf dem Formular anzeigen */
   showNewsletter: boolean;
 }
+
+export interface NewsletterBranding {
+  /** HTML-Snippet, das oberhalb des Inhalts gerendert wird (z. B. Logo + Titel) */
+  headerHtml?: string;
+  /** HTML-Snippet, das unterhalb des Inhalts gerendert wird (z. B. Adresse, Abmelde-Link) */
+  footerHtml?: string;
+  /** Hintergrundfarbe der Mail (außerhalb des Inhaltsbereichs) */
+  background?: string;
+  /** Hintergrundfarbe des Inhaltsbereichs */
+  contentBackground?: string;
+  /** Textfarbe im Inhaltsbereich */
+  textColor?: string;
+  /** Akzentfarbe (Links / Buttons) */
+  accentColor?: string;
+}
