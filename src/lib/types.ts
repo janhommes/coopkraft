@@ -212,7 +212,12 @@ export interface Campaign {
   endsAt?: string;
   location?: string;
   /** Empfängerfilter */
-  audience: { newsletterOnly: boolean; statuses: MemberStatus[] };
+  audience: {
+    newsletterOnly: boolean;
+    statuses: MemberStatus[];
+    /** Wenn gesetzt, werden ausschließlich diese Mitgliedsnummern adressiert (Custom-Auswahl) */
+    memberIds?: string[];
+  };
   createdAt: string;
   createdBy: string;
 }
