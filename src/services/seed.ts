@@ -7,6 +7,7 @@ import type {
   Member,
   Settings,
   ShareLot,
+  Termination,
   WorkflowConfig,
 } from "@/lib/types";
 
@@ -204,6 +205,27 @@ export async function seedIfEmpty(): Promise<void> {
       };
       await put("shareLots", lot);
     }
+  }
+
+  // Kündigungs-Datensätze für Mitglieder im Status "terminating"
+  const terminatingMembers = allMembers.filter((m) => m.status === "terminating");
+  for (const m of terminatingMembers) {
+    const t: Termination = {
+      id: uid(),
+      target: "membership",
+      memberId: m.id,
+      requestedBy: "u-anna",
+      requestedAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+      reason: "Umzug ins Ausland",
+      effectiveDate: m.austrittDatum ?? new Date(new Date().getFullYear(), 11, 31).toISOString().slice(0, 10),
+      payoutDate: new Date(new Date().getFullYear() + 1, 5, 30).toISOString().slice(0, 10),
+      status: "approved",
+      approvals: [
+        { userId: "u-anna", userName: "Anna Mitglied", role: "vorstand", at: new Date(Date.now() - 6 * 86400000).toISOString() },
+        { userId: "u-greta", userName: "Greta Admin", role: "vorstand", at: new Date(Date.now() - 5 * 86400000).toISOString() },
+      ],
+    };
+    await put("terminations", t);
   }
 
   // Globale Dokumente (Platzhalter-PDFs als Blob)
