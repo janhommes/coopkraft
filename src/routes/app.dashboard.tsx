@@ -48,14 +48,61 @@ function DashboardPage() {
     const myActive = myLots.filter((l) => l.status === "active" || l.status === "terminating");
     const totalShares = myActive.reduce((s, l) => s + l.count, 0);
     const totalValue = myActive.reduce((s, l) => s + l.count * l.valuePerShare, 0);
+    const myDividendSeries = (divQ.data ?? [])
+      .map((r) => ({
+        label: `GJ ${r.fiscalYear}`,
+        fiscalYear: r.fiscalYear,
+        amount: +r.items
+          .filter((i) => i.memberId === user.memberId)
+          .reduce((s, i) => s + i.amount, 0)
+          .toFixed(2),
+      }))
+      .filter((d) => d.amount > 0)
+      .sort((a, b) => a.fiscalYear - b.fiscalYear);
+    const totalDividends = myDividendSeries.reduce((s, d) => s + d.amount, 0);
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Willkommen, {user.name}</h1>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <KPI label="Meine Anteile" value={String(totalShares)} />
           <KPI label="Gesamtwert" value={formatEuro(totalValue)} />
           <KPI label="Aktive Lots" value={String(myActive.length)} />
+          <KPI label="Dividenden erhalten" value={formatEuro(totalDividends)} sub={`${myDividendSeries.length} Auszahlung(en)`} />
         </div>
+        {myDividendSeries.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Meine Dividenden</CardTitle>
+              <p className="text-xs text-muted-foreground">Auszahlungen pro Geschäftsjahr</p>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                className="h-[260px] w-full"
+                config={{ amount: { label: "Auszahlung", color: "var(--primary)" } }}
+              >
+                <BarChart data={myDividendSeries} margin={{ left: 8, right: 8, top: 8, bottom: 0 }}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    width={64}
+                    tickFormatter={(v: number) => formatEuroCompact(v)}
+                  />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        indicator="line"
+                        formatter={(value) => formatEuro(Number(value))}
+                      />
+                    }
+                  />
+                  <Bar dataKey="amount" fill="var(--color-amount)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        )}
         {user.memberId && (
           <Link to="/app/mitglieder/$id" params={{ id: user.memberId }} className="text-sm text-primary underline">
             Zu meinem Profil →
