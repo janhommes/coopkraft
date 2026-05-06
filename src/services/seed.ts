@@ -42,6 +42,14 @@ const defaultSettings: Settings = {
     satzungText: 'Ich habe die <a href="/dokumente/satzung" target="_blank" rel="noreferrer" class="underline">Satzung</a> gelesen und akzeptiere sie.',
     showNewsletter: true,
   },
+  newsletter: {
+    headerHtml: '<table width="100%" cellpadding="0" cellspacing="0" style="background:#2e7d32;color:#ffffff;padding:24px;text-align:center;font-family:Arial,sans-serif;"><tr><td><h1 style="margin:0;font-size:22px;font-weight:600;">Demo Energie eG</h1><p style="margin:6px 0 0;font-size:13px;opacity:0.9;">Newsletter</p></td></tr></table>',
+    footerHtml: '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f0;color:#555;padding:20px;text-align:center;font-family:Arial,sans-serif;font-size:12px;"><tr><td>Demo Energie eG · Musterstraße 1 · 12345 Musterstadt<br/>Du erhältst diese Mail, weil du Mitglied bist oder den Newsletter abonniert hast.<br/><a href="#" style="color:#2e7d32;">Vom Newsletter abmelden</a></td></tr></table>',
+    background: "#eeeeee",
+    contentBackground: "#ffffff",
+    textColor: "#1a1a1a",
+    accentColor: "#2e7d32",
+  },
 };
 
 const defaultWorkflow: WorkflowConfig = {
