@@ -35,7 +35,7 @@ export function Sidebar() {
     { to: "/app/admin/branding", match: "/app/admin", label: "Admin", icon: SettingsIcon, show: !!user?.roles.includes("admin") },
   ];
   return (
-    <aside className="hidden w-60 shrink-0 border-r bg-sidebar text-sidebar-foreground md:flex md:flex-col">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r bg-sidebar text-sidebar-foreground md:flex md:flex-col">
       <div className="border-b p-4">
         <Logo />
       </div>
