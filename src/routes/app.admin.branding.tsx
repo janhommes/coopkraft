@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getSettings, saveSettings } from "@/services/settings.service";
-import type { SignupBranding } from "@/lib/types";
+import type { NewsletterBranding, SignupBranding } from "@/lib/types";
+import { mergeNewsletterBranding, renderNewsletterHtml } from "@/lib/newsletter";
 
 export const Route = createFileRoute("/app/admin/branding")({
   component: BrandingAdmin,
@@ -36,6 +37,7 @@ function BrandingAdmin() {
     satzungText: 'Ich habe die <a href="/dokumente/satzung" target="_blank" rel="noreferrer" class="underline">Satzung</a> gelesen und akzeptiere sie.',
     showNewsletter: true,
   });
+  const [newsletter, setNewsletter] = useState<Required<NewsletterBranding>>(mergeNewsletterBranding());
 
   useEffect(() => {
     if (q.data) {
@@ -56,6 +58,7 @@ function BrandingAdmin() {
         satzungText: q.data.signup?.satzungText ?? 'Ich habe die <a href="/dokumente/satzung" target="_blank" rel="noreferrer" class="underline">Satzung</a> gelesen und akzeptiere sie.',
         showNewsletter: q.data.signup?.showNewsletter ?? true,
       });
+      setNewsletter(mergeNewsletterBranding(q.data.newsletter));
     }
   }, [q.data]);
 
@@ -77,6 +80,7 @@ function BrandingAdmin() {
       sidebarForeground,
       logoDataUrl: logo,
       signup,
+      newsletter,
     });
     qc.invalidateQueries(); toast.success("Gespeichert");
   };
@@ -205,7 +209,45 @@ function BrandingAdmin() {
       </div>
 
       <EmbedCard />
+
+      <NewsletterBrandingCard value={newsletter} onChange={setNewsletter} />
     </div>
+  );
+}
+
+function NewsletterBrandingCard({ value, onChange }: { value: Required<NewsletterBranding>; onChange: (v: Required<NewsletterBranding>) => void }) {
+  const set = <K extends keyof Required<NewsletterBranding>>(k: K, v: Required<NewsletterBranding>[K]) => onChange({ ...value, [k]: v });
+  const previewHtml = renderNewsletterHtml({
+    subject: "Vorschau",
+    bodyHtml: '<p>Hallo,</p><p>so sieht euer Newsletter mit dem aktuellen Header und Footer aus. Inhalte aus dem Newsletter-Editor erscheinen genau hier.</p><p><a href="#">Beispiel-Link</a></p>',
+    branding: value,
+  });
+  return (
+    <Card>
+      <CardHeader><CardTitle>Newsletter-Branding</CardTitle></CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <ColorField label="Mail-Hintergrund" value={value.background} onChange={(v) => set("background", v)} />
+          <ColorField label="Inhalts-Hintergrund" value={value.contentBackground} onChange={(v) => set("contentBackground", v)} />
+          <ColorField label="Textfarbe" value={value.textColor} onChange={(v) => set("textColor", v)} />
+          <ColorField label="Akzentfarbe (Links/Buttons)" value={value.accentColor} onChange={(v) => set("accentColor", v)} />
+        </div>
+        <div>
+          <Label>Header (HTML)</Label>
+          <Textarea rows={6} className="font-mono text-xs" value={value.headerHtml} onChange={(e) => set("headerHtml", e.target.value)} />
+          <p className="mt-1 text-xs text-muted-foreground">Wird oben in jeder Newsletter-Mail eingefügt. Inline-Styles verwenden.</p>
+        </div>
+        <div>
+          <Label>Footer (HTML)</Label>
+          <Textarea rows={6} className="font-mono text-xs" value={value.footerHtml} onChange={(e) => set("footerHtml", e.target.value)} />
+          <p className="mt-1 text-xs text-muted-foreground">Wird unten in jeder Newsletter-Mail eingefügt – z. B. Adresse &amp; Abmelde-Link.</p>
+        </div>
+        <div>
+          <Label>Vorschau</Label>
+          <iframe title="Newsletter-Vorschau" srcDoc={previewHtml} className="mt-1.5 h-[420px] w-full rounded border bg-white" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
