@@ -1,4 +1,4 @@
-import { getAll, getOne, put, uid } from "./db";
+import { getAll, getOne, put, del, uid } from "./db";
 import type { AppUser, Approval, Member, MemberStatus, PaymentConfirmation } from "@/lib/types";
 import { logAudit } from "./audit.service";
 import { getWorkflow } from "./settings.service";
@@ -128,4 +128,36 @@ export async function confirmPayment(
     await put("shareLots", { ...lot, status: "active", paidAt: new Date().toISOString().slice(0, 10) });
   }
   await recomputeMemberStatus(memberId, user);
+}
+
+/**
+ * Löscht ein Mitglied vollständig inklusive aller verknüpften Datensätze.
+ * Nur durch Admins aufzurufen (Permission-Check erfolgt in der UI).
+ */
+export async function deleteMember(memberId: string, user: AppUser): Promise<void> {
+  const member = await getMember(memberId);
+  if (!member) throw new Error("Mitglied nicht gefunden");
+
+  // Verknüpfte Datensätze einsammeln und löschen
+  const lots = (await getAll<import("@/lib/types").ShareLot>("shareLots")).filter((l) => l.memberId === memberId);
+  const approvals = (await listApprovals()).filter((a) => a.memberId === memberId);
+  const payments = (await listPaymentConfirmations()).filter((p) => p.memberId === memberId);
+  const terminations = (await getAll<import("@/lib/types").Termination>("terminations")).filter((t) => t.memberId === memberId);
+  const transfers = (await getAll<import("@/lib/types").ShareTransfer>("shareTransfers")).filter(
+    (t) => t.fromMemberId === memberId || t.toMemberId === memberId,
+  );
+  const docs = (await getAll<import("@/lib/types").DocumentRecord>("documents")).filter((d) => d.memberId === memberId);
+
+  for (const l of lots) await del("shareLots", l.id);
+  for (const a of approvals) await del("approvals", a.id);
+  for (const p of payments) await del("paymentConfirmations", p.id);
+  for (const t of terminations) await del("terminations", t.id);
+  for (const t of transfers) await del("shareTransfers", t.id);
+  for (const d of docs) {
+    await del("documents", d.id);
+    await del("documentFiles", d.id).catch(() => {});
+  }
+
+  await del("members", memberId);
+  await logAudit(user, "Mitglied gelöscht", `${member.vorname} ${member.nachname} (Nr. ${member.mitgliedsnummer})`, memberId);
 }
