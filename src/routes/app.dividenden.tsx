@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Link } from "@tanstack/react-router";
-import { Trash2, ChevronDown, ChevronRight, FileText, AlertTriangle } from "lucide-react";
+import { Trash2, ChevronDown, ChevronRight, FileText, AlertTriangle, ExternalLink } from "lucide-react";
 import {
   listDividendRuns,
   createDividendRun,
@@ -23,6 +23,8 @@ import {
   deleteDividendRun,
 } from "@/services/dividends.service";
 import { listMembers } from "@/services/members.service";
+import { listLots } from "@/services/shares.service";
+import { calcDividend } from "@/services/dividends.service";
 import { downloadDocument } from "@/services/documents.service";
 import { getSettings } from "@/services/settings.service";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -48,8 +50,31 @@ function DivPage() {
 
   const stammdatenOk = !!settingsQ.data?.genossenschaft?.name && !!settingsQ.data?.genossenschaft?.strasse;
 
+  const lotsQ = useQuery({ queryKey: ["lots"], queryFn: listLots });
+
+  // Mitglieder, die im aktuellen Lauf Empfänger wären und denen Steuerangaben fehlen
+  const missingTaxMembers = (() => {
+    const members = membersQ.data ?? [];
+    const lots = lotsQ.data ?? [];
+    if (!members.length || !lots.length) return [] as Member[];
+    const { items } = calcDividend(lots, year, rate);
+    const recipientIds = new Set(items.map((i) => i.memberId));
+    const memberMap = new Map(members.map((m) => [m.id, m] as const));
+    return Array.from(recipientIds)
+      .map((id) => memberMap.get(id))
+      .filter((m): m is Member => !!m)
+      .filter((m) => !m.bundesland || !m.konfession)
+      .sort((a, b) => a.nachname.localeCompare(b.nachname));
+  })();
+
   const create = async () => {
     if (!user) return;
+    if (missingTaxMembers.length > 0) {
+      const ok = window.confirm(
+        `${missingTaxMembers.length} Mitglied(er) haben keine vollständigen Steuerangaben (Bundesland/Konfession). Bei diesen wird keine Kirchensteuer abgezogen. Trotzdem fortfahren?`,
+      );
+      if (!ok) return;
+    }
     setBusy(true);
     const t = toast.loading("Berechne Lauf und erzeuge Bescheinigungen…");
     try {
