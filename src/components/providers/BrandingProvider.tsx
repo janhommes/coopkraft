@@ -29,7 +29,10 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
       root.style.setProperty("--muted", `color-mix(in oklab, ${bg} 92%, var(--foreground) 8%)`);
       root.style.setProperty("--secondary", `color-mix(in oklab, ${bg} 94%, var(--foreground) 6%)`);
       root.style.setProperty("--border", `color-mix(in oklab, ${bg} 86%, var(--foreground) 14%)`);
-      root.style.setProperty("--input", `color-mix(in oklab, ${bg} 88%, var(--foreground) 12%)`);
+      // --input ist nur die Border-Farbe der Inputs, nicht der Hintergrund.
+      // Wir lassen die Input-Hintergründe neutral (default Card/Background im Theme),
+      // setzen aber eine dezente Border passend zur Fläche.
+      root.style.setProperty("--input", `color-mix(in oklab, ${bg} 86%, var(--foreground) 14%)`);
     }
 
     const sb = q.data.sidebarBackground;
