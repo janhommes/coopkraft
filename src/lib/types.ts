@@ -308,6 +308,7 @@ export interface Settings {
   defaultLand: Land;
   fiscalYearEndMonth: number; // 12 = Dezember
   signup?: SignupBranding;
+  newsletter?: NewsletterBranding;
 }
 
 export interface SignupBranding {
