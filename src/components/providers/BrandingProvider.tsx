@@ -19,6 +19,16 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--accent", q.data.accent);
     root.style.setProperty("--ring", q.data.primary);
 
+    if (q.data.foreground) {
+      root.style.setProperty("--foreground", q.data.foreground);
+      root.style.setProperty("--card-foreground", q.data.foreground);
+      root.style.setProperty("--popover-foreground", q.data.foreground);
+    }
+    if (q.data.sidebarForeground) {
+      root.style.setProperty("--sidebar-foreground", q.data.sidebarForeground);
+      root.style.setProperty("--sidebar-accent-foreground", q.data.sidebarForeground);
+    }
+
     const bg = q.data.background;
     if (bg) {
       root.style.setProperty("--background", bg);
