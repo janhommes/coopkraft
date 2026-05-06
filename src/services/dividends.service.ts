@@ -1,4 +1,4 @@
-import { getAll, put, uid } from "./db";
+import { getAll, put, del, uid } from "./db";
 import type { AppUser, DividendRun, Member, ShareLot } from "@/lib/types";
 import { logAudit } from "./audit.service";
 
@@ -59,4 +59,32 @@ export async function aggregateByMember(items: DividendRun["items"]): Promise<{ 
     if (m) out.push({ member: m, total: +total.toFixed(2) });
   }
   return out.sort((a, b) => b.total - a.total);
+}
+
+/** Löscht einen Dividendenlauf vollständig. */
+export async function deleteDividendRun(runId: string, user: AppUser): Promise<void> {
+  const all = await listDividendRuns();
+  const run = all.find((r) => r.id === runId);
+  if (!run) throw new Error("Dividendenlauf nicht gefunden");
+  await del("dividends", runId);
+  await logAudit(
+    user,
+    "Dividendenlauf gelöscht",
+    `GJ ${run.fiscalYear} – ${run.ratePercent}% – ${run.totalAmount.toFixed(2)} €`,
+  );
+}
+
+/** Liefert pro Lauf die Summe und die zugehörigen Items für ein Mitglied. */
+export async function dividendsByMember(
+  memberId: string,
+): Promise<{ run: DividendRun; total: number; items: DividendRun["items"] }[]> {
+  const runs = await listDividendRuns();
+  const out: { run: DividendRun; total: number; items: DividendRun["items"] }[] = [];
+  for (const r of runs) {
+    const items = r.items.filter((i) => i.memberId === memberId);
+    if (items.length === 0) continue;
+    const total = +items.reduce((s, i) => s + i.amount, 0).toFixed(2);
+    out.push({ run: r, total, items });
+  }
+  return out.sort((a, b) => b.run.fiscalYear - a.run.fiscalYear);
 }
