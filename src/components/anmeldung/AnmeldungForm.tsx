@@ -155,6 +155,14 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
     return null;
   };
 
+  const validateAll = (): string | null => {
+    for (let i = 0; i < stepLabels.length; i++) {
+      const e = validateStep(i);
+      if (e) return e;
+    }
+    return null;
+  };
+
   const next = () => {
     const err = validateStep(step);
     if (err) {
@@ -164,7 +172,7 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
     setStep((s) => Math.min(s + 1, stepLabels.length - 1));
   };
   const submit = () => {
-    const err = validateStep(step);
+    const err = layout === "single" ? validateAll() : validateStep(step);
     if (err) {
       toast.error(err);
       return;
@@ -177,20 +185,23 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
   return (
     <Card>
       <CardContent className={compact ? "p-4" : "p-6"}>
-        <div className="mb-6 flex flex-wrap gap-2">
-          {stepLabels.map((l, i) => (
-            <div
-              key={l}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
-                i === step ? "bg-primary text-primary-foreground" : i < step ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {i + 1}. {l}
-            </div>
-          ))}
-        </div>
+        {layout === "stepper" && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {stepLabels.map((l, i) => (
+              <div
+                key={l}
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  i === step ? "bg-primary text-primary-foreground" : i < step ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i + 1}. {l}
+              </div>
+            ))}
+          </div>
+        )}
 
-        {step === 0 && (
+        {(layout === "single" || step === 0) && (
+          <Section title="Persönlich" hide={layout !== "single"}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Kontakttyp">
               <Select value={state.typ} onValueChange={(v) => set("typ", v as Kontakttyp)}>
@@ -222,9 +233,11 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
             <Field label="E-Mail *"><Input type="email" value={state.email} onChange={(e) => set("email", e.target.value)} /></Field>
             <Field label="Telefon"><Input value={state.telefon} onChange={(e) => set("telefon", e.target.value)} /></Field>
           </div>
+          </Section>
         )}
 
-        {step === 1 && (
+        {(layout === "single" || step === 1) && (
+          <Section title="Adresse" hide={layout !== "single"}>
           <div className="grid gap-4 md:grid-cols-3">
             <Field className="md:col-span-2" label="Straße *"><Input value={state.strasse} onChange={(e) => set("strasse", e.target.value)} /></Field>
             <Field label="Hausnr. *"><Input value={state.hausnummer} onChange={(e) => set("hausnummer", e.target.value)} /></Field>
@@ -241,9 +254,11 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
               </Select>
             </Field>
           </div>
+          </Section>
         )}
 
-        {step === 2 && (
+        {(layout === "single" || step === 2) && (
+          <Section title="Bankverbindung" hide={layout !== "single"}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field className="md:col-span-2" label="Kontoinhaber"><Input value={state.kontoinhaber} onChange={(e) => set("kontoinhaber", e.target.value)} placeholder={`${state.vorname} ${state.nachname}`.trim()} /></Field>
             <Field className="md:col-span-2" label="IBAN *"><Input value={state.iban} onChange={(e) => set("iban", e.target.value.toUpperCase())} placeholder="DE89 3704 0044 0532 0130 00" /></Field>
@@ -252,9 +267,11 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
               Mit Angabe der IBAN erteilst du der Genossenschaft ein SEPA-Lastschriftmandat für den Anteilsbeitrag.
             </p>
           </div>
+          </Section>
         )}
 
-        {step === 3 && (
+        {(layout === "single" || step === 3) && (
+          <Section title="Anteile" hide={layout !== "single"}>
           <div className="space-y-4">
             <Field label={`Anzahl Anteile (${settings?.minAnteile} – ${settings?.maxAnteile})`}>
               <Input type="number" min={settings?.minAnteile} max={settings?.maxAnteile} value={state.anteile} onChange={(e) => set("anteile", Number(e.target.value))} />
@@ -280,16 +297,22 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
               </Field>
             ))}
           </div>
+          </Section>
         )}
 
-        {step === 4 && (
+        {(layout === "single" || step === 4) && (
+          <Section title="Bestätigung" hide={layout !== "single"}>
           <div className="space-y-4">
-            <p className="text-sm">Bitte prüfe deine Angaben:</p>
-            <Textarea
-              readOnly
-              rows={8}
-              value={`${state.vorname} ${state.nachname}\n${state.strasse} ${state.hausnummer}\n${state.plz} ${state.ort}, ${LAND_LABELS[state.land]}\n${state.email}\nIBAN: ${state.iban}\n${state.anteile} Anteile à ${formatEuro(settings?.anteilsWert ?? 0)} = ${formatEuro(totalCost)}`}
-            />
+            {layout === "stepper" && (
+              <>
+                <p className="text-sm">Bitte prüfe deine Angaben:</p>
+                <Textarea
+                  readOnly
+                  rows={8}
+                  value={`${state.vorname} ${state.nachname}\n${state.strasse} ${state.hausnummer}\n${state.plz} ${state.ort}, ${LAND_LABELS[state.land]}\n${state.email}\nIBAN: ${state.iban}\n${state.anteile} Anteile à ${formatEuro(settings?.anteilsWert ?? 0)} = ${formatEuro(totalCost)}`}
+                />
+              </>
+            )}
             <label className="flex items-start gap-2 text-sm">
               <Checkbox checked={state.satzungAkzeptiert} onCheckedChange={(c) => set("satzungAkzeptiert", !!c)} className="mt-0.5" />
               <span>
@@ -301,8 +324,10 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
               <span>Ich möchte den Newsletter erhalten.</span>
             </label>
           </div>
+          </Section>
         )}
 
+        {layout === "stepper" ? (
         <div className="mt-8 flex justify-between">
           <Button variant="ghost" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
             Zurück
@@ -315,6 +340,13 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
             </Button>
           )}
         </div>
+        ) : (
+          <div className="mt-8 flex justify-end">
+            <Button onClick={submit} disabled={submitMut.isPending} size="lg">
+              {submitMut.isPending ? "Sende…" : "Antrag absenden"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -326,5 +358,15 @@ function Field({ label, children, className }: { label: string; children: React.
       <Label>{label}</Label>
       {children}
     </div>
+  );
+}
+
+function Section({ title, hide, children }: { title: string; hide: boolean; children: React.ReactNode }) {
+  if (hide) return <>{children}</>;
+  return (
+    <section className="mb-8 border-b pb-6 last:border-0 last:pb-0">
+      <h2 className="mb-4 text-lg font-semibold">{title}</h2>
+      {children}
+    </section>
   );
 }
