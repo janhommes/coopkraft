@@ -25,6 +25,7 @@ import {
   listTerminations,
   rejectTermination,
   requestTermination,
+  cancelTermination,
 } from "@/services/terminations.service";
 import {
   approveTransfer,
