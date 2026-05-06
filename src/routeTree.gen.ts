@@ -26,6 +26,7 @@ import { Route as AppMitgliederNeuRouteImport } from './routes/app.mitglieder.ne
 import { Route as AppMitgliederIdRouteImport } from './routes/app.mitglieder.$id'
 import { Route as AppAdminWorkflowRouteImport } from './routes/app.admin.workflow'
 import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
+import { Route as AppAdminNewsletterRouteImport } from './routes/app.admin.newsletter'
 import { Route as AppAdminKontoRouteImport } from './routes/app.admin.konto'
 import { Route as AppAdminFelderRouteImport } from './routes/app.admin.felder'
 import { Route as AppAdminBrandingRouteImport } from './routes/app.admin.branding'
@@ -117,6 +118,11 @@ const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminNewsletterRoute = AppAdminNewsletterRouteImport.update({
+  id: '/newsletter',
+  path: '/newsletter',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminKontoRoute = AppAdminKontoRouteImport.update({
   id: '/konto',
   path: '/konto',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
+  '/app/admin/newsletter': typeof AppAdminNewsletterRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/admin/workflow': typeof AppAdminWorkflowRoute
   '/app/mitglieder/$id': typeof AppMitgliederIdRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
+  '/app/admin/newsletter': typeof AppAdminNewsletterRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/admin/workflow': typeof AppAdminWorkflowRoute
   '/app/mitglieder/$id': typeof AppMitgliederIdRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
+  '/app/admin/newsletter': typeof AppAdminNewsletterRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/admin/workflow': typeof AppAdminWorkflowRoute
   '/app/mitglieder/$id': typeof AppMitgliederIdRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
+    | '/app/admin/newsletter'
     | '/app/admin/users'
     | '/app/admin/workflow'
     | '/app/mitglieder/$id'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
+    | '/app/admin/newsletter'
     | '/app/admin/users'
     | '/app/admin/workflow'
     | '/app/mitglieder/$id'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
+    | '/app/admin/newsletter'
     | '/app/admin/users'
     | '/app/admin/workflow'
     | '/app/mitglieder/$id'
@@ -420,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsersRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/newsletter': {
+      id: '/app/admin/newsletter'
+      path: '/newsletter'
+      fullPath: '/app/admin/newsletter'
+      preLoaderRoute: typeof AppAdminNewsletterRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/app/admin/konto': {
       id: '/app/admin/konto'
       path: '/konto'
@@ -464,6 +483,7 @@ interface AppAdminRouteChildren {
   AppAdminBrandingRoute: typeof AppAdminBrandingRoute
   AppAdminFelderRoute: typeof AppAdminFelderRoute
   AppAdminKontoRoute: typeof AppAdminKontoRoute
+  AppAdminNewsletterRoute: typeof AppAdminNewsletterRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
   AppAdminWorkflowRoute: typeof AppAdminWorkflowRoute
 }
@@ -474,6 +494,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminBrandingRoute: AppAdminBrandingRoute,
   AppAdminFelderRoute: AppAdminFelderRoute,
   AppAdminKontoRoute: AppAdminKontoRoute,
+  AppAdminNewsletterRoute: AppAdminNewsletterRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,
   AppAdminWorkflowRoute: AppAdminWorkflowRoute,
 }
