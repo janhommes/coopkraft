@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import {
   approveMembership,
   confirmPayment,
+  deleteMember,
   getMember,
   saveMember,
   listApprovals,
@@ -50,6 +51,7 @@ function MemberDetailPage() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const memberQ = useQuery({ queryKey: ["member", id], queryFn: () => getMember(id) });
   const lotsQ = useQuery({ queryKey: ["lots"], queryFn: listLots });
   const apprQ = useQuery({ queryKey: ["approvals"], queryFn: listApprovals });
@@ -79,6 +81,22 @@ function MemberDetailPage() {
 
   const isSelf = user.memberId === id;
 
+  const onDelete = async () => {
+    if (!user.roles.includes("admin")) return;
+    const confirmed = window.confirm(
+      `Mitglied "${m.vorname} ${m.nachname}" (Nr. ${m.mitgliedsnummer}) wirklich vollständig löschen?\n\nAlle Anteile, Approvals, Zahlungen, Kündigungen, Übertragungen und Dokumente werden mit gelöscht. Dies kann nicht rückgängig gemacht werden.`,
+    );
+    if (!confirmed) return;
+    try {
+      await deleteMember(m.id, user);
+      qc.invalidateQueries();
+      toast.success("Mitglied gelöscht");
+      navigate({ to: "/app/mitglieder" });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -87,7 +105,14 @@ function MemberDetailPage() {
           <h1 className="mt-1 text-2xl font-bold">{m.vorname} {m.nachname}</h1>
           <p className="text-sm text-muted-foreground">Mitgliedsnr. {m.mitgliedsnummer} · {m.email}</p>
         </div>
-        <Badge variant="outline">{m.status}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline">{m.status}</Badge>
+          {can(user, "delete:member") && (
+            <Button variant="destructive" size="sm" onClick={onDelete}>
+              Mitglied löschen
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="stamm">
