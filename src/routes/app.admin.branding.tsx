@@ -16,12 +16,17 @@ function BrandingAdmin() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const [name, setName] = useState("");
-  const [primary, setPrimary] = useState("");
-  const [accent, setAccent] = useState("");
+  const [primary, setPrimary] = useState("#2e7d32");
+  const [accent, setAccent] = useState("#f5a524");
   const [logo, setLogo] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (q.data) { setName(q.data.genossenschaftsName); setPrimary(q.data.primary); setAccent(q.data.accent); setLogo(q.data.logoDataUrl); }
+    if (q.data) {
+      setName(q.data.genossenschaftsName);
+      setPrimary(toHex(q.data.primary));
+      setAccent(toHex(q.data.accent));
+      setLogo(q.data.logoDataUrl);
+    }
   }, [q.data]);
 
   const onLogo = (f: File | null) => {
@@ -38,10 +43,51 @@ function BrandingAdmin() {
   return (
     <Card><CardContent className="grid gap-4 p-6 md:grid-cols-2">
       <div className="md:col-span-2"><Label>Name der Genossenschaft</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-      <div><Label>Primärfarbe (oklch)</Label><Input value={primary} onChange={(e) => setPrimary(e.target.value)} placeholder="oklch(0.55 0.15 145)" /></div>
-      <div><Label>Akzentfarbe (oklch)</Label><Input value={accent} onChange={(e) => setAccent(e.target.value)} placeholder="oklch(0.7 0.18 75)" /></div>
+      <ColorField label="Primärfarbe" value={primary} onChange={setPrimary} />
+      <ColorField label="Akzentfarbe" value={accent} onChange={setAccent} />
       <div className="md:col-span-2"><Label>Logo (PNG/SVG)</Label><Input type="file" accept="image/*" onChange={(e) => onLogo(e.target.files?.[0] ?? null)} />{logo && <img src={logo} alt="Logo" className="mt-2 h-16 w-16 rounded border object-contain" />}</div>
       <div className="md:col-span-2"><Button onClick={save}>Speichern</Button></div>
     </CardContent></Card>
   );
+}
+
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const hex = /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="mt-1.5 flex items-center gap-2">
+        <input
+          type="color"
+          value={hex}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-10 w-14 cursor-pointer rounded border bg-background"
+          aria-label={label + " Farbwähler"}
+        />
+        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="#2e7d32" className="font-mono" />
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">Hex-Format, z. B. #2e7d32</p>
+    </div>
+  );
+}
+
+// Best-effort: bestehende oklch-Werte aus älteren Settings als Hex anzeigen.
+function toHex(v: string): string {
+  if (!v) return "#2e7d32";
+  if (v.startsWith("#")) return v;
+  if (typeof window !== "undefined") {
+    try {
+      const el = document.createElement("div");
+      el.style.color = v;
+      document.body.appendChild(el);
+      const rgb = getComputedStyle(el).color;
+      document.body.removeChild(el);
+      const m = rgb.match(/\d+/g);
+      if (m && m.length >= 3) {
+        const [r, g, b] = m.map(Number);
+        return "#" + [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("");
+      }
+    } catch {}
+  }
+  return "#2e7d32";
 }

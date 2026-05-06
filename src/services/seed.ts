@@ -13,8 +13,8 @@ const SEED_FLAG = "seeded-v1";
 
 const defaultSettings: Settings = {
   genossenschaftsName: "Demo Energie eG",
-  primary: "oklch(0.55 0.15 145)",
-  accent: "oklch(0.7 0.18 75)",
+  primary: "#2e7d32",
+  accent: "#f5a524",
   anteilsWert: 100,
   minAnteile: 1,
   maxAnteile: 100,
