@@ -18,6 +18,12 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--primary", q.data.primary);
     root.style.setProperty("--accent", q.data.accent);
     root.style.setProperty("--ring", q.data.primary);
+    if (q.data.background) {
+      root.style.setProperty("--background", q.data.background);
+    }
+    if (q.data.sidebarBackground) {
+      root.style.setProperty("--sidebar", q.data.sidebarBackground);
+    }
     document.title = q.data.genossenschaftsName + " – Mitgliederverwaltung";
   }, [q.data]);
 
