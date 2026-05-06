@@ -15,6 +15,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmbedAnmeldungRouteImport } from './routes/embed.anmeldung'
 import { Route as DokumenteSlugRouteImport } from './routes/dokumente.$slug'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppMitgliederIndexRouteImport } from './routes/app.mitglieder.index'
+import { Route as AppMitgliederIdRouteImport } from './routes/app.mitglieder.$id'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -46,6 +48,16 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMitgliederIndexRoute = AppMitgliederIndexRouteImport.update({
+  id: '/mitglieder/',
+  path: '/mitglieder/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMitgliederIdRoute = AppMitgliederIdRouteImport.update({
+  id: '/mitglieder/$id',
+  path: '/mitglieder/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/app/dashboard': typeof AppDashboardRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/mitglieder/$id': typeof AppMitgliederIdRoute
+  '/app/mitglieder/': typeof AppMitgliederIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +76,8 @@ export interface FileRoutesByTo {
   '/app/dashboard': typeof AppDashboardRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/mitglieder/$id': typeof AppMitgliederIdRoute
+  '/app/mitglieder': typeof AppMitgliederIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +87,8 @@ export interface FileRoutesById {
   '/app/dashboard': typeof AppDashboardRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/mitglieder/$id': typeof AppMitgliederIdRoute
+  '/app/mitglieder/': typeof AppMitgliederIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +99,8 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/mitglieder/$id'
+    | '/app/mitglieder/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +109,8 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/mitglieder/$id'
+    | '/app/mitglieder'
   id:
     | '__root__'
     | '/'
@@ -97,6 +119,8 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/mitglieder/$id'
+    | '/app/mitglieder/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -151,15 +175,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/mitglieder/': {
+      id: '/app/mitglieder/'
+      path: '/mitglieder'
+      fullPath: '/app/mitglieder/'
+      preLoaderRoute: typeof AppMitgliederIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mitglieder/$id': {
+      id: '/app/mitglieder/$id'
+      path: '/mitglieder/$id'
+      fullPath: '/app/mitglieder/$id'
+      preLoaderRoute: typeof AppMitgliederIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
+  AppMitgliederIdRoute: typeof AppMitgliederIdRoute
+  AppMitgliederIndexRoute: typeof AppMitgliederIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
+  AppMitgliederIdRoute: AppMitgliederIdRoute,
+  AppMitgliederIndexRoute: AppMitgliederIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
