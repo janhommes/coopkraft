@@ -22,9 +22,9 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     const bg = q.data.background;
     if (bg) {
       root.style.setProperty("--background", bg);
-      // Cards/Popover identisch mit Hintergrund
-      root.style.setProperty("--card", bg);
-      root.style.setProperty("--popover", bg);
+      // Cards/Popover heben sich leicht vom Hintergrund ab (heller bzw. kontrastierend)
+      root.style.setProperty("--card", `color-mix(in oklab, ${bg} 80%, white 20%)`);
+      root.style.setProperty("--popover", `color-mix(in oklab, ${bg} 80%, white 20%)`);
       // Sekundärflächen leicht abgedunkelt vom Hintergrund (Hover, Muted, Secondary)
       root.style.setProperty("--muted", `color-mix(in oklab, ${bg} 92%, var(--foreground) 8%)`);
       root.style.setProperty("--secondary", `color-mix(in oklab, ${bg} 94%, var(--foreground) 6%)`);
