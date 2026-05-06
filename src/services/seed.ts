@@ -17,6 +17,8 @@ const defaultSettings: Settings = {
   accent: "#f5a524",
   background: "#ffffff",
   sidebarBackground: "#f7f7f5",
+  foreground: "#0a0a0a",
+  sidebarForeground: "#0a0a0a",
   anteilsWert: 100,
   minAnteile: 1,
   maxAnteile: 100,
