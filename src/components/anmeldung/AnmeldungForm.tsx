@@ -139,6 +139,10 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
     if (s === 0) {
       if (!state.vorname || !state.nachname) return "Vor- und Nachname sind Pflicht";
       if (!z.string().email().safeParse(state.email).success) return "Bitte gültige E-Mail-Adresse angeben";
+      const errs = validateCustomFields(state.custom, (cfQ.data ?? []).filter((f) => f.showOnSignup && ["titel","firma","geburtsdatum","telefon","bevorzugteAnrede"].includes(f.key)));
+      setCfErrors((e) => ({ ...e, ...errs }));
+      const first = Object.values(errs)[0];
+      if (first) return first;
     }
     if (s === 1) {
       if (!state.strasse || !state.hausnummer || !state.plz || !state.ort) return "Bitte vollständige Adresse angeben";
@@ -150,9 +154,18 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
       if (!settings) return "Konfiguration lädt noch";
       if (state.anteile < settings.minAnteile) return `Mindestens ${settings.minAnteile} Anteile`;
       if (state.anteile > settings.maxAnteile) return `Höchstens ${settings.maxAnteile} Anteile`;
+      const errs = validateCustomFields(state.custom, (cfQ.data ?? []).filter((f) => f.showOnSignup && !["titel","firma","geburtsdatum","telefon","bevorzugteAnrede","newsletter"].includes(f.key)));
+      setCfErrors((e) => ({ ...e, ...errs }));
+      const first = Object.values(errs)[0];
+      if (first) return first;
     }
     if (s === 4) {
       if (!state.satzungAkzeptiert) return "Bitte Satzung bestätigen";
+      const newsletterDef = (cfQ.data ?? []).find((f) => f.key === "newsletter");
+      if (newsletterDef?.required && !(state.custom.newsletter ?? state.newsletter)) {
+        setCfErrors((e) => ({ ...e, newsletter: "Newsletter ist erforderlich" }));
+        return "Newsletter ist erforderlich";
+      }
     }
     return null;
   };
