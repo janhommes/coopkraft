@@ -21,7 +21,7 @@ import { createMember } from "@/services/members.service";
 import { createLot } from "@/services/shares.service";
 import { isValidIban } from "@/services/sepa.service";
 import { LAND_LABELS, formatEuro } from "@/lib/locale";
-import type { Anrede, Kontakttyp, Land } from "@/lib/types";
+import type { Anrede, CustomFieldDef, Kontakttyp, Land } from "@/lib/types";
 
 const stepLabels = ["Persönlich", "Adresse", "Bank", "Anteile", "Bestätigung"];
 
@@ -366,5 +366,41 @@ function Section({ title, hide, children }: { title: string; hide: boolean; chil
       <h2 className="mb-4 text-lg font-semibold">{title}</h2>
       {children}
     </section>
+  );
+}
+
+function renderCustomField(
+  f: CustomFieldDef,
+  values: Record<string, unknown>,
+  set: (k: "custom", v: Record<string, unknown>) => void,
+  errors: Record<string, string>,
+) {
+  const v = values[f.key];
+  const onChange = (val: unknown) => set("custom", { ...values, [f.key]: val });
+  const err = errors[f.key];
+  return (
+    <div key={f.id} className="space-y-1.5">
+      <Label>{f.label}{f.required && " *"}</Label>
+      {f.type === "text" && <Input value={(v as string) ?? ""} onChange={(e) => onChange(e.target.value)} />}
+      {f.type === "number" && (
+        <Input type="number" value={v === undefined ? "" : (v as number)} onChange={(e) => onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+      )}
+      {f.type === "date" && <Input type="date" value={(v as string) ?? ""} onChange={(e) => onChange(e.target.value)} />}
+      {f.type === "checkbox" && (
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox checked={!!v} onCheckedChange={(c) => onChange(!!c)} />
+          <span className="text-muted-foreground">{f.label}</span>
+        </label>
+      )}
+      {f.type === "select" && (
+        <Select value={(v as string) ?? ""} onValueChange={(val) => onChange(val)}>
+          <SelectTrigger><SelectValue placeholder="Bitte wählen" /></SelectTrigger>
+          <SelectContent>
+            {(f.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      )}
+      {err && <p className="text-xs text-destructive">{err}</p>}
+    </div>
   );
 }
