@@ -36,6 +36,9 @@ const defaultSettings: Settings = {
     showLogo: true,
     layout: "stepper",
     customCss: "",
+    title: "Mitglied werden",
+    satzungText: 'Ich habe die <a href="/dokumente/satzung" target="_blank" rel="noreferrer" class="underline">Satzung</a> gelesen und akzeptiere sie.',
+    showNewsletter: true,
   },
 };
 

@@ -315,14 +315,20 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
             )}
             <label className="flex items-start gap-2 text-sm">
               <Checkbox checked={state.satzungAkzeptiert} onCheckedChange={(c) => set("satzungAkzeptiert", !!c)} className="mt-0.5" />
-              <span>
-                Ich habe die <a href="/dokumente/satzung" target="_blank" rel="noreferrer" className="underline">Satzung</a> gelesen und akzeptiere sie.
-              </span>
+              <span
+                dangerouslySetInnerHTML={{
+                  __html:
+                    settings?.signup?.satzungText ??
+                    'Ich habe die <a href="/dokumente/satzung" target="_blank" rel="noreferrer" class="underline">Satzung</a> gelesen und akzeptiere sie.',
+                }}
+              />
             </label>
-            <label className="flex items-start gap-2 text-sm">
-              <Checkbox checked={state.newsletter} onCheckedChange={(c) => set("newsletter", !!c)} className="mt-0.5" />
-              <span>Ich möchte den Newsletter erhalten.</span>
-            </label>
+            {(settings?.signup?.showNewsletter ?? true) && (
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox checked={state.newsletter} onCheckedChange={(c) => set("newsletter", !!c)} className="mt-0.5" />
+                <span>Ich möchte den Newsletter erhalten.</span>
+              </label>
+            )}
           </div>
           </Section>
         )}

@@ -30,6 +30,9 @@ function BrandingAdmin() {
     showLogo: true,
     layout: "stepper",
     customCss: "",
+    title: "Mitglied werden",
+    satzungText: 'Ich habe die <a href="/dokumente/satzung" target="_blank" rel="noreferrer" class="underline">Satzung</a> gelesen und akzeptiere sie.',
+    showNewsletter: true,
   });
 
   useEffect(() => {
@@ -45,6 +48,9 @@ function BrandingAdmin() {
         showLogo: q.data.signup?.showLogo ?? true,
         layout: q.data.signup?.layout ?? "stepper",
         customCss: q.data.signup?.customCss ?? "",
+        title: q.data.signup?.title ?? "Mitglied werden",
+        satzungText: q.data.signup?.satzungText ?? 'Ich habe die <a href="/dokumente/satzung" target="_blank" rel="noreferrer" class="underline">Satzung</a> gelesen und akzeptiere sie.',
+        showNewsletter: q.data.signup?.showNewsletter ?? true,
       });
     }
   }, [q.data]);
@@ -109,6 +115,23 @@ function BrandingAdmin() {
             <Switch checked={signup.showLogo} onCheckedChange={(v) => setSignup({ ...signup, showLogo: v })} />
           </div>
 
+          <div className="flex items-center justify-between rounded border p-3">
+            <div>
+              <Label>Newsletter-Opt-In zeigen</Label>
+              <p className="text-xs text-muted-foreground">Zeigt am Ende des Formulars eine Checkbox zur Newsletter-Anmeldung.</p>
+            </div>
+            <Switch checked={signup.showNewsletter} onCheckedChange={(v) => setSignup({ ...signup, showNewsletter: v })} />
+          </div>
+
+          <div>
+            <Label>Titel</Label>
+            <Input
+              value={signup.title ?? ""}
+              onChange={(e) => setSignup({ ...signup, title: e.target.value })}
+              placeholder="Mitglied werden"
+            />
+          </div>
+
           <div>
             <Label>Layout</Label>
             <RadioGroup
@@ -142,6 +165,17 @@ function BrandingAdmin() {
               placeholder="Werde Teil unserer Energiegenossenschaft…"
             />
             <p className="mt-1 text-xs text-muted-foreground">Wird oberhalb des Formulars angezeigt. Zeilenumbrüche werden übernommen.</p>
+          </div>
+
+          <div>
+            <Label>Text Satzungs-Akzeptanz</Label>
+            <Textarea
+              rows={3}
+              value={signup.satzungText ?? ""}
+              onChange={(e) => setSignup({ ...signup, satzungText: e.target.value })}
+              placeholder='Ich habe die <a href="/dokumente/satzung">Satzung</a> gelesen…'
+            />
+            <p className="mt-1 text-xs text-muted-foreground">HTML erlaubt – z. B. für Links auf die Satzung.</p>
           </div>
 
           <div>
