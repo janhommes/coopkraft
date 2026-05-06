@@ -36,6 +36,7 @@ import {
 } from "@/services/shares.service";
 import { listAudit } from "@/services/audit.service";
 import { listDocuments, uploadDocument, deleteDocument, downloadDocument } from "@/services/documents.service";
+import { dividendsByMember } from "@/services/dividends.service";
 import { getSettings, getWorkflow } from "@/services/settings.service";
 import { calcEffectiveDate } from "@/lib/termination";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -60,6 +61,7 @@ function MemberDetailPage() {
   const transQ = useQuery({ queryKey: ["transfers"], queryFn: listTransfers });
   const docsQ = useQuery({ queryKey: ["documents"], queryFn: listDocuments });
   const auditQ = useQuery({ queryKey: ["audit", id], queryFn: () => listAudit(id) });
+  const divQ = useQuery({ queryKey: ["dividends", "member", id], queryFn: () => dividendsByMember(id) });
   const wfQ = useQuery({ queryKey: ["workflow"], queryFn: getWorkflow });
   const settingsQ = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const allMembersQ = useQuery({ queryKey: ["members"], queryFn: async () => (await import("@/services/members.service")).listMembers() });
@@ -122,6 +124,7 @@ function MemberDetailPage() {
           <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
           <TabsTrigger value="approvals">Approvals</TabsTrigger>
           <TabsTrigger value="kuendigung">Kündigung</TabsTrigger>
+          <TabsTrigger value="dividenden">Dividenden ({divQ.data?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="audit">Audit</TabsTrigger>
         </TabsList>
 
