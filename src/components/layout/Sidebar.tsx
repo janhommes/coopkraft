@@ -15,6 +15,7 @@ import { Logo } from "./Logo";
 
 interface Item {
   to: string;
+  match?: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   show: boolean;
@@ -31,7 +32,7 @@ export function Sidebar() {
     { to: "/app/kommunikation", label: "Kommunikation", icon: Megaphone, show: can(user, "manage:campaigns") || !!user?.roles.includes("vorstand") },
     { to: "/app/dividenden", label: "Dividenden", icon: PiggyBank, show: can(user, "run:dividends") },
     { to: "/app/sepa", label: "SEPA-Lauf", icon: FileDown, show: can(user, "run:sepa") },
-    { to: "/app/admin/branding", label: "Admin", icon: SettingsIcon, show: !!user?.roles.includes("admin") },
+    { to: "/app/admin/branding", match: "/app/admin", label: "Admin", icon: SettingsIcon, show: !!user?.roles.includes("admin") },
   ];
   return (
     <aside className="hidden w-60 shrink-0 border-r bg-sidebar text-sidebar-foreground md:flex md:flex-col">
@@ -40,7 +41,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {items.filter((i) => i.show).map((i) => {
-          const active = loc.pathname.startsWith(i.to);
+          const active = loc.pathname.startsWith(i.match ?? i.to);
           const Icon = i.icon;
           return (
             <Link
