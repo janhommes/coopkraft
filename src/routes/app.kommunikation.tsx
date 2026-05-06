@@ -116,15 +116,26 @@ function KommPage() {
 
   const resetForm = () => {
     setEditingId(null);
-    setSubject(""); setBody(""); setType("newsletter");
+    setSubject(""); setBody("");
+    setEventEnabled(false); setEventTitle(""); setEventStart(""); setEventEnd(""); setEventLocation(""); setEventDescription("");
     setAudienceMode("newsletter"); setSelectedIds([]);
   };
 
   const loadCampaign = (c: Campaign) => {
     setEditingId(c.id);
-    setType(c.type);
     setSubject(c.subject);
     setBody(extractBodyFromRendered(c.bodyHtml));
+    if (c.startsAt || c.endsAt || c.location) {
+      setEventEnabled(true);
+      setEventTitle(c.subject);
+      setEventStart(c.startsAt ? toLocalInput(c.startsAt) : "");
+      setEventEnd(c.endsAt ? toLocalInput(c.endsAt) : "");
+      setEventLocation(c.location ?? "");
+      setEventDescription("");
+    } else {
+      setEventEnabled(false);
+      setEventTitle(""); setEventStart(""); setEventEnd(""); setEventLocation(""); setEventDescription("");
+    }
     if (c.audience.memberIds && c.audience.memberIds.length) {
       setAudienceMode("custom"); setSelectedIds(c.audience.memberIds);
     } else if (c.audience.newsletterOnly) {
