@@ -331,9 +331,11 @@ function MemberDetailPage() {
               ) : (
                 <>
                   <div className="mb-3 flex items-center justify-between border-b pb-2">
-                    <span className="font-medium">Insgesamt erhalten</span>
+                    <span className="font-medium">Insgesamt erhalten (brutto / netto)</span>
                     <span className="font-semibold">
                       {formatEuro((divQ.data ?? []).reduce((s, d) => s + d.total, 0))}
+                      {" / "}
+                      {formatEuro((divQ.data ?? []).reduce((s, d) => s + d.items.reduce((a, i) => a + (i.net ?? i.amount), 0), 0))}
                     </span>
                   </div>
                   <div className="space-y-2">
@@ -346,13 +348,37 @@ function MemberDetailPage() {
                               Lauf vom {formatDate(d.run.createdAt)} · {d.items.length} Lot(s)
                             </div>
                           </div>
-                          <div className="text-right font-semibold">{formatEuro(d.total)}</div>
+                          <div className="text-right">
+                            <div className="font-semibold">{formatEuro(d.total)} brutto</div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatEuro(d.items.reduce((s, i) => s + (i.net ?? i.amount), 0))} netto
+                            </div>
+                            {d.run.certificates?.[m.id] && (
+                              <button
+                                type="button"
+                                className="mt-1 text-xs text-primary hover:underline"
+                                onClick={async () => {
+                                  const certId = d.run.certificates?.[m.id];
+                                  if (!certId) return;
+                                  const r = await downloadDocument(certId);
+                                  if (r) window.open(r.url, "_blank");
+                                }}
+                              >
+                                Steuerbescheinigung (PDF)
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="mt-2 space-y-1 border-t pt-2 text-xs text-muted-foreground">
                           {d.items.map((it, idx) => (
                             <div key={idx} className="flex justify-between">
                               <span>Lot {it.lotId.slice(0, 6)} · {it.days} Tage</span>
-                              <span>{formatEuro(it.amount)}</span>
+                              <span>
+                                {formatEuro(it.amount)}
+                                {it.net !== undefined && it.net !== it.amount && (
+                                  <span className="ml-2 text-[11px]">(netto {formatEuro(it.net)})</span>
+                                )}
+                              </span>
                             </div>
                           ))}
                         </div>
