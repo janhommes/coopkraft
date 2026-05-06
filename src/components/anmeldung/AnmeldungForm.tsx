@@ -225,16 +225,13 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Titel"><Input value={state.titel} onChange={(e) => set("titel", e.target.value)} /></Field>
-            {state.typ === "Unternehmen" && (
-              <Field label="Firma"><Input value={state.firma} onChange={(e) => set("firma", e.target.value)} /></Field>
-            )}
             <Field label="Vorname *"><Input value={state.vorname} onChange={(e) => set("vorname", e.target.value)} /></Field>
             <Field label="Nachname *"><Input value={state.nachname} onChange={(e) => set("nachname", e.target.value)} /></Field>
-            <Field label="Geburtsdatum"><Input type="date" value={state.geburtsdatum} onChange={(e) => set("geburtsdatum", e.target.value)} /></Field>
             <Field label="E-Mail *"><Input type="email" value={state.email} onChange={(e) => set("email", e.target.value)} /></Field>
-            <Field label="Telefon"><Input value={state.telefon} onChange={(e) => set("telefon", e.target.value)} /></Field>
           </div>
+          {(cfQ.data ?? [])
+            .filter((f) => f.showOnSignup && f.type !== "checkbox" && ["titel","firma","geburtsdatum","telefon","bevorzugteAnrede"].includes(f.key))
+            .map((f) => renderCustomField(f, state.custom, set, cfErrors))}
           </Section>
         )}
 
@@ -282,22 +279,9 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
               <p className="text-sm">Anteilswert pro Stück: <strong>{formatEuro(settings?.anteilsWert ?? 0)}</strong></p>
               <p className="mt-1 text-lg font-semibold">Gesamt: {formatEuro(totalCost)}</p>
             </div>
-            {(cfQ.data ?? []).filter((f) => f.showOnSignup).map((f) => (
-              <Field key={f.id} label={f.label + (f.required ? " *" : "")}>
-                {f.type === "select" && (
-                  <Select value={(state.custom[f.key] as string) ?? ""} onValueChange={(v) => set("custom", { ...state.custom, [f.key]: v })}>
-                    <SelectTrigger><SelectValue placeholder="Bitte wählen" /></SelectTrigger>
-                    <SelectContent>{(f.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                  </Select>
-                )}
-                {f.type === "text" && <Input value={(state.custom[f.key] as string) ?? ""} onChange={(e) => set("custom", { ...state.custom, [f.key]: e.target.value })} />}
-                {f.type === "number" && <Input type="number" value={(state.custom[f.key] as number) ?? 0} onChange={(e) => set("custom", { ...state.custom, [f.key]: Number(e.target.value) })} />}
-                {f.type === "date" && <Input type="date" value={(state.custom[f.key] as string) ?? ""} onChange={(e) => set("custom", { ...state.custom, [f.key]: e.target.value })} />}
-                {f.type === "checkbox" && (
-                  <Checkbox checked={!!state.custom[f.key]} onCheckedChange={(c) => set("custom", { ...state.custom, [f.key]: !!c })} />
-                )}
-              </Field>
-            ))}
+            {(cfQ.data ?? [])
+              .filter((f) => f.showOnSignup && !["titel","firma","geburtsdatum","telefon","bevorzugteAnrede","newsletter"].includes(f.key))
+              .map((f) => renderCustomField(f, state.custom, set, cfErrors))}
           </div>
           </Section>
         )}
@@ -325,12 +309,18 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
                 }}
               />
             </label>
-            {(settings?.signup?.showNewsletter ?? true) && (
-              <label className="flex items-start gap-2 text-sm">
-                <Checkbox checked={state.newsletter} onCheckedChange={(c) => set("newsletter", !!c)} className="mt-0.5" />
-                <span>Ich möchte den Newsletter erhalten.</span>
-              </label>
-            )}
+            {(settings?.signup?.showNewsletter ?? true) && (cfQ.data ?? [])
+              .filter((f) => f.key === "newsletter" && f.showOnSignup)
+              .map((f) => (
+                <label key={f.id} className="flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={state.custom.newsletter !== undefined ? !!state.custom.newsletter : state.newsletter}
+                    onCheckedChange={(c) => set("custom", { ...state.custom, newsletter: !!c })}
+                    className="mt-0.5"
+                  />
+                  <span>{f.label}{f.required && " *"}</span>
+                </label>
+              ))}
           </div>
           </Section>
         )}
