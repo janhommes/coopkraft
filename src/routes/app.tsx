@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { Sidebar, MobileSidebarTrigger } from "@/components/layout/Sidebar";
 import { UserSwitcher } from "@/components/layout/UserSwitcher";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Logo } from "@/components/layout/Logo";
@@ -25,7 +25,8 @@ function AppLayout() {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-4 border-b bg-card px-4 py-3 md:px-6">
-          <div className="md:hidden">
+          <div className="flex items-center gap-2 md:hidden">
+            <MobileSidebarTrigger />
             <Logo />
           </div>
           <div className="hidden md:block" />
