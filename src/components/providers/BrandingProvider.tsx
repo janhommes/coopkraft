@@ -18,12 +18,27 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--primary", q.data.primary);
     root.style.setProperty("--accent", q.data.accent);
     root.style.setProperty("--ring", q.data.primary);
-    if (q.data.background) {
-      root.style.setProperty("--background", q.data.background);
+
+    const bg = q.data.background;
+    if (bg) {
+      root.style.setProperty("--background", bg);
+      // Cards/Popover identisch mit Hintergrund
+      root.style.setProperty("--card", bg);
+      root.style.setProperty("--popover", bg);
+      // Sekundärflächen leicht abgedunkelt vom Hintergrund (Hover, Muted, Secondary)
+      root.style.setProperty("--muted", `color-mix(in oklab, ${bg} 92%, var(--foreground) 8%)`);
+      root.style.setProperty("--secondary", `color-mix(in oklab, ${bg} 94%, var(--foreground) 6%)`);
+      root.style.setProperty("--border", `color-mix(in oklab, ${bg} 86%, var(--foreground) 14%)`);
+      root.style.setProperty("--input", `color-mix(in oklab, ${bg} 88%, var(--foreground) 12%)`);
     }
-    if (q.data.sidebarBackground) {
-      root.style.setProperty("--sidebar", q.data.sidebarBackground);
+
+    const sb = q.data.sidebarBackground;
+    if (sb) {
+      root.style.setProperty("--sidebar", sb);
+      root.style.setProperty("--sidebar-accent", `color-mix(in oklab, ${sb} 86%, var(--foreground) 14%)`);
+      root.style.setProperty("--sidebar-border", `color-mix(in oklab, ${sb} 88%, var(--foreground) 12%)`);
     }
+
     document.title = q.data.genossenschaftsName + " – Mitgliederverwaltung";
   }, [q.data]);
 
