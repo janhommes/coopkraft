@@ -106,9 +106,22 @@ function DivPage() {
       {agg && (
         <Card>
           <CardHeader><CardTitle>Vorschau pro Mitglied</CardTitle></CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            {agg.slice(0, 20).map((a) => (
-              <div key={a.member.id} className="flex justify-between border-b py-1.5"><span>{a.member.vorname} {a.member.nachname}</span><span>{formatEuro(a.total)}</span></div>
+          <CardContent className="text-sm">
+            <div className="grid grid-cols-[1fr_repeat(4,auto)] gap-x-4 gap-y-1.5 border-b pb-1.5 text-xs font-medium text-muted-foreground">
+              <span>Mitglied</span>
+              <span className="text-right">Brutto</span>
+              <span className="text-right">KapESt+Soli</span>
+              <span className="text-right">KiSt</span>
+              <span className="text-right">Netto</span>
+            </div>
+            {agg.slice(0, 30).map((a) => (
+              <div key={a.member.id} className="grid grid-cols-[1fr_repeat(4,auto)] items-center gap-x-4 gap-y-1.5 border-b py-1.5">
+                <span className="truncate">{a.member.vorname} {a.member.nachname}</span>
+                <span className="text-right">{formatEuro(a.gross)}</span>
+                <span className="text-right text-muted-foreground">{formatEuro(a.kapest + a.soli)}</span>
+                <span className="text-right text-muted-foreground">{formatEuro(a.kist)}</span>
+                <span className="text-right font-medium">{formatEuro(a.net)}</span>
+              </div>
             ))}
           </CardContent>
         </Card>
