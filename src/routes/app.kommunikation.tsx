@@ -15,8 +15,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useBranding } from "@/components/providers/BrandingProvider";
 import { buildBrandedFooter, buildBrandedHeader, renderNewsletterHtml } from "@/lib/newsletter";
 import { formatDate } from "@/lib/locale";
-import type { Campaign, CampaignType, Member } from "@/lib/types";
-import { Bold, Italic, Heading2, List, ListOrdered, Link2, Image as ImageIcon, Quote, Minus, Trash2, Pencil, Search, X } from "lucide-react";
+import type { Campaign, Member } from "@/lib/types";
+import { Bold, Italic, Heading2, List, ListOrdered, Link2, Image as ImageIcon, Quote, Minus, Trash2, Pencil, Search, X, Calendar, Download } from "lucide-react";
 
 export const Route = createFileRoute("/app/kommunikation")({
   component: KommPage,
