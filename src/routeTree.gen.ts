@@ -28,7 +28,9 @@ import { Route as AppAdminWorkflowRouteImport } from './routes/app.admin.workflo
 import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
 import { Route as AppAdminKontoRouteImport } from './routes/app.admin.konto'
 import { Route as AppAdminFelderRouteImport } from './routes/app.admin.felder'
+import { Route as AppAdminBrandingRouteImport } from './routes/app.admin.branding'
 import { Route as AppAdminAnteileRouteImport } from './routes/app.admin.anteile'
+import { Route as AppAdminAnmeldungRouteImport } from './routes/app.admin.anmeldung'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -125,9 +127,19 @@ const AppAdminFelderRoute = AppAdminFelderRouteImport.update({
   path: '/felder',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminBrandingRoute = AppAdminBrandingRouteImport.update({
+  id: '/branding',
+  path: '/branding',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminAnteileRoute = AppAdminAnteileRouteImport.update({
   id: '/anteile',
   path: '/anteile',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminAnmeldungRoute = AppAdminAnmeldungRouteImport.update({
+  id: '/anmeldung',
+  path: '/anmeldung',
   getParentRoute: () => AppAdminRoute,
 } as any)
 
@@ -144,7 +156,9 @@ export interface FileRoutesByFullPath {
   '/app/sepa': typeof AppSepaRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/admin/anmeldung': typeof AppAdminAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
+  '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/users': typeof AppAdminUsersRoute
@@ -166,7 +180,9 @@ export interface FileRoutesByTo {
   '/app/sepa': typeof AppSepaRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/admin/anmeldung': typeof AppAdminAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
+  '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/users': typeof AppAdminUsersRoute
@@ -189,7 +205,9 @@ export interface FileRoutesById {
   '/app/sepa': typeof AppSepaRoute
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
+  '/app/admin/anmeldung': typeof AppAdminAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
+  '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/users': typeof AppAdminUsersRoute
@@ -213,7 +231,9 @@ export interface FileRouteTypes {
     | '/app/sepa'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/admin/anmeldung'
     | '/app/admin/anteile'
+    | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/users'
@@ -235,7 +255,9 @@ export interface FileRouteTypes {
     | '/app/sepa'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/admin/anmeldung'
     | '/app/admin/anteile'
+    | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/users'
@@ -257,7 +279,9 @@ export interface FileRouteTypes {
     | '/app/sepa'
     | '/dokumente/$slug'
     | '/embed/anmeldung'
+    | '/app/admin/anmeldung'
     | '/app/admin/anteile'
+    | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/users'
@@ -410,6 +434,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminFelderRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/branding': {
+      id: '/app/admin/branding'
+      path: '/branding'
+      fullPath: '/app/admin/branding'
+      preLoaderRoute: typeof AppAdminBrandingRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/app/admin/anteile': {
       id: '/app/admin/anteile'
       path: '/anteile'
@@ -417,11 +448,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminAnteileRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/anmeldung': {
+      id: '/app/admin/anmeldung'
+      path: '/anmeldung'
+      fullPath: '/app/admin/anmeldung'
+      preLoaderRoute: typeof AppAdminAnmeldungRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
   }
 }
 
 interface AppAdminRouteChildren {
+  AppAdminAnmeldungRoute: typeof AppAdminAnmeldungRoute
   AppAdminAnteileRoute: typeof AppAdminAnteileRoute
+  AppAdminBrandingRoute: typeof AppAdminBrandingRoute
   AppAdminFelderRoute: typeof AppAdminFelderRoute
   AppAdminKontoRoute: typeof AppAdminKontoRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
@@ -429,7 +469,9 @@ interface AppAdminRouteChildren {
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminAnmeldungRoute: AppAdminAnmeldungRoute,
   AppAdminAnteileRoute: AppAdminAnteileRoute,
+  AppAdminBrandingRoute: AppAdminBrandingRoute,
   AppAdminFelderRoute: AppAdminFelderRoute,
   AppAdminKontoRoute: AppAdminKontoRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,
