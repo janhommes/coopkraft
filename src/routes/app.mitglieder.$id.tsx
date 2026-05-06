@@ -290,21 +290,108 @@ function MemberDetailPage() {
           {myTerminations.length > 0 && (
             <Card>
               <CardHeader><CardTitle>Kündigungen</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
-                {myTerminations.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between rounded border p-2 text-sm">
-                    <div>
-                      <div className="font-medium">{t.target === "membership" ? "Mitgliedschaft" : `Anteile (${t.shareCount})`}</div>
-                      <div className="text-muted-foreground">Wirksam {formatDate(t.effectiveDate)} · Auszahlung {formatDate(t.payoutDate)} · Status {terminationStatusLabel(t.status)}</div>
-                    </div>
-                    {t.status === "pending" && can(user, "approve:termination") && (
-                      <div className="flex gap-1">
-                        <Button size="sm" onClick={async () => { try { await approveTermination(t.id, user); qc.invalidateQueries(); toast.success("Bestätigt"); } catch (e) { toast.error((e as Error).message); } }}>Bestätigen</Button>
-                        <Button size="sm" variant="ghost" onClick={async () => { await rejectTermination(t.id, user); qc.invalidateQueries(); }}>Ablehnen</Button>
+              <CardContent className="space-y-3">
+                {[...myTerminations]
+                  .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))
+                  .map((t) => {
+                    const today = new Date().toISOString().slice(0, 10);
+                    const isActive = t.status === "pending" || t.status === "approved";
+                    const canCancel =
+                      isActive &&
+                      t.effectiveDate > today &&
+                      (can(user, "edit:member") || (isSelf && t.status === "pending"));
+                    const lot = t.lotId ? (lotsQ.data ?? []).find((l) => l.id === t.lotId) : undefined;
+                    return (
+                      <div key={t.id} className="rounded border p-3 text-sm space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-1">
+                            <div className="font-medium">
+                              {t.target === "membership"
+                                ? "Kündigung der Mitgliedschaft"
+                                : `Kündigung von ${t.shareCount ?? lot?.count ?? "?"} Anteil(en)`}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Eingereicht am {formatDateTime(t.requestedAt)}
+                            </div>
+                          </div>
+                          <Badge variant={
+                            t.status === "approved" ? "default"
+                            : t.status === "pending" ? "secondary"
+                            : "outline"
+                          }>
+                            {terminationStatusLabel(t.status)}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <div className="text-muted-foreground">Wirksam zum</div>
+                            <div className="font-medium">{formatDate(t.effectiveDate)}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Auszahlung</div>
+                            <div className="font-medium">{formatDate(t.payoutDate)}</div>
+                          </div>
+                          {lot && (
+                            <div className="col-span-2">
+                              <div className="text-muted-foreground">Betroffenes Lot</div>
+                              <div className="font-medium">
+                                Lot {lot.id.slice(0, 6)} · {lot.count} Anteile · gez. {formatDate(lot.signedAt)}
+                              </div>
+                            </div>
+                          )}
+                          {t.reason && (
+                            <div className="col-span-2">
+                              <div className="text-muted-foreground">Begründung</div>
+                              <div className="whitespace-pre-wrap">{t.reason}</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {t.approvals.length > 0 && (
+                          <div className="text-xs">
+                            <div className="text-muted-foreground mb-1">Bestätigungen</div>
+                            <ul className="space-y-0.5">
+                              {t.approvals.map((a, i) => (
+                                <li key={i}>
+                                  · {a.userName} <span className="text-muted-foreground">({ROLE_LABELS[a.role] ?? a.role})</span> – {formatDateTime(a.at)}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {(t.status === "pending" || canCancel) && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {t.status === "pending" && can(user, "approve:termination") && (
+                              <>
+                                <Button size="sm" onClick={async () => { try { await approveTermination(t.id, user); qc.invalidateQueries(); toast.success("Bestätigt"); } catch (e) { toast.error((e as Error).message); } }}>Bestätigen</Button>
+                                <Button size="sm" variant="ghost" onClick={async () => { await rejectTermination(t.id, user); qc.invalidateQueries(); toast.success("Abgelehnt"); }}>Ablehnen</Button>
+                              </>
+                            )}
+                            {canCancel && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={async () => {
+                                  if (!window.confirm("Kündigung wirklich zurückziehen? Status wird auf aktiv zurückgesetzt.")) return;
+                                  try {
+                                    await cancelTermination(t.id, user);
+                                    qc.invalidateQueries();
+                                    toast.success("Kündigung zurückgezogen");
+                                  } catch (e) {
+                                    toast.error((e as Error).message);
+                                  }
+                                }}
+                              >
+                                Kündigung abbrechen
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    );
+                  })}
               </CardContent>
             </Card>
           )}
