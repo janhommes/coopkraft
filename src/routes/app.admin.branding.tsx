@@ -203,7 +203,81 @@ function BrandingAdmin() {
       <div className="flex justify-end">
         <Button onClick={save}>Alle Änderungen speichern</Button>
       </div>
+
+      <EmbedCard />
     </div>
+  );
+}
+
+function EmbedCard() {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const publicUrl = `${origin}/anmeldung`;
+  const embedUrl = `${origin}/embed/anmeldung`;
+  const snippet = `<div id="egv-anmeldung"></div>
+<script>
+(function(){
+  var c = document.getElementById('egv-anmeldung');
+  var f = document.createElement('iframe');
+  f.src = ${JSON.stringify(embedUrl)};
+  f.style.width = '100%';
+  f.style.border = '0';
+  f.style.minHeight = '600px';
+  f.setAttribute('loading','lazy');
+  f.setAttribute('title','Beitrittsformular');
+  c.appendChild(f);
+  window.addEventListener('message', function(e){
+    if (e && e.data && e.data.type === 'egv:resize' && typeof e.data.height === 'number') {
+      f.style.height = (e.data.height + 32) + 'px';
+    }
+  });
+})();
+</script>`;
+
+  const copy = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(label + " kopiert");
+    } catch {
+      toast.error("Kopieren fehlgeschlagen");
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Einbettung &amp; Link</CardTitle></CardHeader>
+      <CardContent className="grid gap-4">
+        <div>
+          <Label>Direkter Link zum Beitrittsformular</Label>
+          <div className="mt-1.5 flex items-center gap-2">
+            <Input readOnly value={publicUrl} className="font-mono text-xs" />
+            <Button type="button" variant="outline" onClick={() => copy(publicUrl, "Link")}>Kopieren</Button>
+            <Button type="button" variant="outline" asChild>
+              <a href={publicUrl} target="_blank" rel="noreferrer">Öffnen</a>
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Diesen Link könnt ihr direkt teilen oder verlinken.</p>
+        </div>
+
+        <div>
+          <Label>Embed-Code für eure Webseite</Label>
+          <Textarea
+            readOnly
+            rows={14}
+            value={snippet}
+            className="font-mono text-xs"
+          />
+          <div className="mt-2 flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => copy(snippet, "Embed-Code")}>Embed-Code kopieren</Button>
+            <Button type="button" variant="outline" asChild>
+              <a href={embedUrl} target="_blank" rel="noreferrer">Embed-Vorschau</a>
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Fügt den Code an der gewünschten Stelle eurer Webseite ein. Das iframe passt seine Höhe automatisch an den Inhalt an.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
