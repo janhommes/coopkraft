@@ -49,11 +49,12 @@ interface FormState {
   custom: Record<string, unknown>;
 }
 
-export function AnmeldungForm({ compact = false }: { compact?: boolean }) {
+export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: boolean; layoutOverride?: "stepper" | "single" }) {
   const settingsQ = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const cfQ = useQuery({ queryKey: ["customFields"], queryFn: listCustomFields });
   const qc = useQueryClient();
   const settings = settingsQ.data;
+  const layout: "stepper" | "single" = layoutOverride ?? settings?.signup?.layout ?? "stepper";
   const [step, setStep] = useState(0);
   const [done, setDone] = useState<{ name: string; nummer: number } | null>(null);
   const [state, setState] = useState<FormState>({
