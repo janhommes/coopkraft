@@ -78,6 +78,8 @@ function MemberDetailPage() {
   const settingsQ = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const allMembersQ = useQuery({ queryKey: ["members"], queryFn: async () => (await import("@/services/members.service")).listMembers() });
 
+  const [tab, setTab] = useState("stamm");
+
   const m = memberQ.data;
   if (!m || !user) return <div className="p-6 text-muted-foreground">Lade…</div>;
 
