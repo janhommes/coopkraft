@@ -171,11 +171,17 @@ function MemberDetailPage() {
             </CardContent>
           </Card>
           {(can(user, "edit:member") || isSelf) && m.status === "active" && settingsQ.data && (
-            <Button onClick={async () => {
-              await createLot(m.id, 1, settingsQ.data!.anteilsWert, user, false);
-              qc.invalidateQueries();
-              toast.success("Anteil gezeichnet (Zahlungseingang ausstehend)");
-            }}>+ Weiteren Anteil zeichnen</Button>
+            <SubscribeSharesButton
+              currentTotal={myLots.filter((l) => l.status === "active" || l.status === "pending_payment" || l.status === "terminating").reduce((s, l) => s + l.count, 0)}
+              minAnteile={settingsQ.data.minAnteile}
+              maxAnteile={settingsQ.data.maxAnteile}
+              valuePerShare={settingsQ.data.anteilsWert}
+              onSubscribe={async (count) => {
+                await createLot(m.id, count, settingsQ.data!.anteilsWert, user, false);
+                qc.invalidateQueries();
+                toast.success(`${count} Anteil${count === 1 ? "" : "e"} gezeichnet (Zahlungseingang ausstehend)`);
+              }}
+            />
           )}
         </TabsContent>
 
