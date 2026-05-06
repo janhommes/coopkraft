@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AnmeldungRouteImport } from './routes/anmeldung'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EmbedAnmeldungRouteImport } from './routes/embed.anmeldung'
+import { Route as DokumenteSlugRouteImport } from './routes/dokumente.$slug'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 
 const AppRoute = AppRouteImport.update({
@@ -18,9 +21,24 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnmeldungRoute = AnmeldungRouteImport.update({
+  id: '/anmeldung',
+  path: '/anmeldung',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedAnmeldungRoute = EmbedAnmeldungRouteImport.update({
+  id: '/embed/anmeldung',
+  path: '/embed/anmeldung',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DokumenteSlugRoute = DokumenteSlugRouteImport.update({
+  id: '/dokumente/$slug',
+  path: '/dokumente/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -31,31 +49,62 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/anmeldung': typeof AnmeldungRoute
   '/app': typeof AppRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
+  '/dokumente/$slug': typeof DokumenteSlugRoute
+  '/embed/anmeldung': typeof EmbedAnmeldungRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/anmeldung': typeof AnmeldungRoute
   '/app': typeof AppRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
+  '/dokumente/$slug': typeof DokumenteSlugRoute
+  '/embed/anmeldung': typeof EmbedAnmeldungRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/anmeldung': typeof AnmeldungRoute
   '/app': typeof AppRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
+  '/dokumente/$slug': typeof DokumenteSlugRoute
+  '/embed/anmeldung': typeof EmbedAnmeldungRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/app/dashboard'
+  fullPaths:
+    | '/'
+    | '/anmeldung'
+    | '/app'
+    | '/app/dashboard'
+    | '/dokumente/$slug'
+    | '/embed/anmeldung'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app' | '/app/dashboard'
-  id: '__root__' | '/' | '/app' | '/app/dashboard'
+  to:
+    | '/'
+    | '/anmeldung'
+    | '/app'
+    | '/app/dashboard'
+    | '/dokumente/$slug'
+    | '/embed/anmeldung'
+  id:
+    | '__root__'
+    | '/'
+    | '/anmeldung'
+    | '/app'
+    | '/app/dashboard'
+    | '/dokumente/$slug'
+    | '/embed/anmeldung'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnmeldungRoute: typeof AnmeldungRoute
   AppRoute: typeof AppRouteWithChildren
+  DokumenteSlugRoute: typeof DokumenteSlugRoute
+  EmbedAnmeldungRoute: typeof EmbedAnmeldungRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -67,11 +116,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/anmeldung': {
+      id: '/anmeldung'
+      path: '/anmeldung'
+      fullPath: '/anmeldung'
+      preLoaderRoute: typeof AnmeldungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/anmeldung': {
+      id: '/embed/anmeldung'
+      path: '/embed/anmeldung'
+      fullPath: '/embed/anmeldung'
+      preLoaderRoute: typeof EmbedAnmeldungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dokumente/$slug': {
+      id: '/dokumente/$slug'
+      path: '/dokumente/$slug'
+      fullPath: '/dokumente/$slug'
+      preLoaderRoute: typeof DokumenteSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/dashboard': {
@@ -96,7 +166,10 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnmeldungRoute: AnmeldungRoute,
   AppRoute: AppRouteWithChildren,
+  DokumenteSlugRoute: DokumenteSlugRoute,
+  EmbedAnmeldungRoute: EmbedAnmeldungRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
