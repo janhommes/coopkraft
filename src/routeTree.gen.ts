@@ -28,7 +28,6 @@ import { Route as AppAdminWorkflowRouteImport } from './routes/app.admin.workflo
 import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
 import { Route as AppAdminKontoRouteImport } from './routes/app.admin.konto'
 import { Route as AppAdminFelderRouteImport } from './routes/app.admin.felder'
-import { Route as AppAdminBrandingRouteImport } from './routes/app.admin.branding'
 import { Route as AppAdminAnteileRouteImport } from './routes/app.admin.anteile'
 
 const AppRoute = AppRouteImport.update({
@@ -126,11 +125,6 @@ const AppAdminFelderRoute = AppAdminFelderRouteImport.update({
   path: '/felder',
   getParentRoute: () => AppAdminRoute,
 } as any)
-const AppAdminBrandingRoute = AppAdminBrandingRouteImport.update({
-  id: '/branding',
-  path: '/branding',
-  getParentRoute: () => AppAdminRoute,
-} as any)
 const AppAdminAnteileRoute = AppAdminAnteileRouteImport.update({
   id: '/anteile',
   path: '/anteile',
@@ -151,7 +145,6 @@ export interface FileRoutesByFullPath {
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
-  '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/users': typeof AppAdminUsersRoute
@@ -174,7 +167,6 @@ export interface FileRoutesByTo {
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
-  '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/users': typeof AppAdminUsersRoute
@@ -198,7 +190,6 @@ export interface FileRoutesById {
   '/dokumente/$slug': typeof DokumenteSlugRoute
   '/embed/anmeldung': typeof EmbedAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
-  '/app/admin/branding': typeof AppAdminBrandingRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/users': typeof AppAdminUsersRoute
@@ -223,7 +214,6 @@ export interface FileRouteTypes {
     | '/dokumente/$slug'
     | '/embed/anmeldung'
     | '/app/admin/anteile'
-    | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/users'
@@ -246,7 +236,6 @@ export interface FileRouteTypes {
     | '/dokumente/$slug'
     | '/embed/anmeldung'
     | '/app/admin/anteile'
-    | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/users'
@@ -269,7 +258,6 @@ export interface FileRouteTypes {
     | '/dokumente/$slug'
     | '/embed/anmeldung'
     | '/app/admin/anteile'
-    | '/app/admin/branding'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/users'
@@ -422,13 +410,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminFelderRouteImport
       parentRoute: typeof AppAdminRoute
     }
-    '/app/admin/branding': {
-      id: '/app/admin/branding'
-      path: '/branding'
-      fullPath: '/app/admin/branding'
-      preLoaderRoute: typeof AppAdminBrandingRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
     '/app/admin/anteile': {
       id: '/app/admin/anteile'
       path: '/anteile'
@@ -441,7 +422,6 @@ declare module '@tanstack/react-router' {
 
 interface AppAdminRouteChildren {
   AppAdminAnteileRoute: typeof AppAdminAnteileRoute
-  AppAdminBrandingRoute: typeof AppAdminBrandingRoute
   AppAdminFelderRoute: typeof AppAdminFelderRoute
   AppAdminKontoRoute: typeof AppAdminKontoRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
@@ -450,7 +430,6 @@ interface AppAdminRouteChildren {
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminAnteileRoute: AppAdminAnteileRoute,
-  AppAdminBrandingRoute: AppAdminBrandingRoute,
   AppAdminFelderRoute: AppAdminFelderRoute,
   AppAdminKontoRoute: AppAdminKontoRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,
@@ -499,3 +478,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
