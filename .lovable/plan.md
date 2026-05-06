@@ -1,178 +1,110 @@
-# Plan: Energiegenossenschaft – Mitgliederverwaltung (V1)
-
 ## Ziel
 
-Generische, white-label-fähige Web-App zur Verwaltung von Energiegenossenschafts-Mitgliedern, Anteilen, Dokumenten, Dividenden und Kommunikation. V1 läuft komplett lokal im Browser (IndexedDB) mit Demo-Daten, REST-Migration ohne UI-Umbau möglich.
+Bei jedem Dividendenlauf werden pro Mitglied die Steuern korrekt einbehalten und eine Steuerbescheinigung als PDF erzeugt, die in der Mitglieds-Akte (Dokumente) abgelegt und für das Mitglied sichtbar ist.
 
-## Tech-Stack
+## 1. Datenmodell-Erweiterungen
 
-- TanStack Start, file-based Routing
-- TanStack Query + Service-Layer (`src/services/*`), aktuell IndexedDB via `idb`
-- shadcn/ui, Tailwind v4
-- Zod, `date-fns` (DE), `Intl.NumberFormat` (EUR)
-- Eigener SEPA-XML-Generator (ISO 20022 pain.001.001.09)
-- `@tiptap/react` für Newsletter
-- Auth V1: User-Switcher mit Demo-Usern und kombinierbaren Rollen
+**`Member`** – neue Felder (alle optional, Default = nichts ändern):
+- `freistellung: boolean` – wenn `true`: keine Abzüge (voll freigestellt).
+- `konfession: "keine" | "rk" | "ev" | "sonstige"` – nur informativ; "rk"/"ev" lösen KiSt aus.
+- `bundesland: "BW" | "BY" | "BE" | "BB" | "HB" | "HH" | "HE" | "MV" | "NI" | "NW" | "RP" | "SL" | "SN" | "ST" | "SH" | "TH"` – steuert KiSt-Satz (BY/BW = 8 %, sonst 9 %).
+- `steuerId?: string` – Steuer-Identifikationsnummer (für die Bescheinigung).
 
-## Rollen (kombinierbar)
+UI: Im Mitglieds-Detail neuer Block „Steuerliche Angaben" (editierbar mit `edit:member`/Self).
 
-- `mitglied` – eigenes Dashboard, eigene Anteile/Dokumente, Selbst-Kündigung, Anteilsverkauf/-spende anstoßen
-- `mitgliederverwalter` – manuelle Mitglieder-Anlage, Stammdaten, Dokumenten-Upload, Bearbeitung Kündigungen/Übertragungen
-- `vorstand` – Lese-/Auswertungszugriff
-- `aufsichtsrat` – Lesezugriff, optional Mit-Freigabe (konfigurierbar)
-- `mitgliedsbestaetiger` – Beitritts-Approval
-- `zahlungspruefer` – Zahlungseingänge
-- `kommunikation` – Kampagnen/Newsletter
-- `auszahler` – Dividenden + SEPA + Anteilsrückzahlung
-- `admin` – Konfiguration, Branding, Custom Fields, Workflow-Regeln, User & Rollen, globale Dokumente
+**`Settings.genossenschaft`** – neuer Block für die Bescheinigungs-Kopfzeile:
+- `name`, `strasse`, `hausnummer`, `plz`, `ort`, `land`
+- `steuernummer?`, `ustIdNr?`
+- `vertretenDurch?` (z. B. „Vorstand: Max Mustermann")
+- `registergericht?`, `registernummer?` (optional)
 
-Berechtigungen zentral in `src/lib/permissions.ts`.
+UI: **Neuer Tab „Stammdaten" im Admin** (`/app/admin/stammdaten`) für genau diese Felder. (Konto-Tab bleibt für Bankdaten.)
 
-## Konfigurierbare Workflows (Admin)
+**`DividendRun.items`** – pro Item gespeichert:
+- `gross: number` (bisher `amount`, semantisch „brutto")
+- `kapest: number`
+- `soli: number`
+- `kist: number`
+- `net: number` (`gross - kapest - soli - kist`)
+- `freigestellt: boolean` (Snapshot, falls Flag später geändert wird)
+- `kistRate: number` (8 oder 9, oder 0)
+- `documentId?: string` (Verknüpfung zur erzeugten Bescheinigung)
 
-In `_app/admin.workflow.tsx`:
+`DividendRun` zusätzlich: `totals: { gross, kapest, soli, kist, net }`.
 
-**Beitritt**
-- Anzahl benötigter Mitgliedsbestätigungen (Default 3)
-- Zahlungseingang Pflicht? Wer prüft?
-- Aufsichtsrats-Mitfreigabe + Anzahl
-- Doppel- und Self-Approval verhindern
+Bestehende `amount` bleibt aus Kompatibilität gleich Brutto; neue Felder additiv.
 
-**Kündigungsperioden** (getrennt einstellbar für Mitgliedschaft und einzelne Anteile):
-- Pro Typ (`membership` / `share`):
-  - Frist: Anzahl + Einheit (Monate/Jahre, Default 3 Monate / 2 Jahre)
-  - Stichtag: Monatsende / Quartalsende / Halbjahresende / Jahresende / freier Tag
-  - Mindesthaltedauer ab Beitritt/Zeichnung (Default 0 / 24 Monate)
-  - Frühester Austrittstermin: berechnet aus Eingangsdatum + Frist, gerundet auf nächsten Stichtag, frühestens nach Mindesthaltedauer
-  - Wer bestätigt (Rollen-Auswahl, Default `mitgliederverwalter` + `vorstand`)
-  - Anzahl Bestätigungen
-  - Auszahlung der Anteile bei Austritt: sofort am Stichtag / nach Bilanzfeststellung des Folgejahres
-- Beispiel-UI: Live-Vorschau „Würde ein Mitglied heute kündigen, wäre Austritt zum: …"
-- Übergangsregel: bestehende offene Kündigungen behalten ihren bei Einreichung berechneten Austrittstermin (Audit-Notiz)
+## 2. Berechnung
 
-**Anteilsübertragung**
-- Verkauf erlaubt? Spende erlaubt? Wer bestätigt?
+Pro Lot wie bisher Brutto = `kapital * rate% * tage/365`.
 
-Audit-Log pro Mitglied speichert jede Aktion und Workflow-Konfig-Änderung.
+Pro Mitglied dann:
+- `freistellung === true` → `kapest = soli = kist = 0`, `net = gross`.
+- sonst:
+  - `kapest = round2(gross * 0.25)`
+  - `soli   = round2(kapest * 0.055)`
+  - `kistRate = (konfession in {rk, ev}) ? (bundesland in {BY, BW} ? 8 : 9) : 0`
+  - `kist   = round2(kapest * kistRate / 100)`
+  - bei KiSt > 0: minimaler KapESt-Minderungs-Effekt (§ 32d EStG) wird **nicht** modelliert (zu komplex; wird in der Bescheinigung als „ohne Anrechnung KiSt-Sonderausgabe" hinweisen). Vereinfachung explizit dokumentieren.
+- `net = gross - kapest - soli - kist`.
 
-## Mitglieder-Detailansicht
+## 3. PDF-Bescheinigung
 
-Route `_app/mitglieder.$id.tsx` mit Tabs:
+Pro Empfänger des Laufs ein PDF „Steuerbescheinigung Dividende GJ {jahr}" mit:
+- Aussteller-Block (aus `Settings.genossenschaft`)
+- Empfänger-Block (Mitglied: Anschrift, Mitgliedsnr., Steuer-ID falls vorhanden)
+- Zeitraum, Anzahl Anteile, gehaltene Tage je Lot
+- Tabelle: Brutto, KapESt 25 %, Soli 5,5 % auf KapESt, KiSt {0/8/9 %}, Auszahlungsbetrag (netto)
+- Hinweis bei Freistellung („Freistellungsauftrag liegt vor")
+- Datum, Ort, Hinweis „Diese Bescheinigung wurde elektronisch erzeugt"
 
-1. **Stammdaten** – Felder + Custom Fields, Inline-Edit für `mitgliederverwalter`/`admin`
-2. **Anteile** – alle Lots (Datum, Anzahl, Wert, Zahlungsstatus), Aktionen pro Lot:
-   - „Weitere Anteile zeichnen"
-   - „Anteile kündigen" (nutzt Kündigungsperiode `share`, Lot-Splitting bei Teilkündigung)
-   - „Anteile verkaufen" → Käufer-Auswahl (existierendes/neues Mitglied) + Anzahl + Preis → Transfer `pending`
-   - „Anteile spenden" → Empfänger + Zweck, Preis = 0
-3. **Dokumente** – Upload/Download/Löschen, Sichtbarkeit pro Doc (intern / auch Mitglied)
-4. **Approvals** – Beitritts-Workflow-Status, Buttons je Rolle
-5. **Kündigung** – Status-Box:
-   - Mitglied selbst: Button „Mitgliedschaft kündigen" → Modal mit auto-berechnetem frühestem Austrittsdatum (gemäß Admin-Konfig), optionalem späterem Wunschdatum, Begründung optional
-   - `mitgliederverwalter`/`vorstand`: bestätigt/lehnt ab, kann im Auftrag erfassen
-   - Status-Maschine: `active` → `terminating` (mit Austrittsdatum) → am Stichtag automatisch `terminated`; offene Anteile gemäß Auszahlungs-Regel als Posten in SEPA-Lauf (Rolle `auszahler`)
-6. **Audit-Log** – chronologisch
+Erzeugung: clientseitig mit `jspdf` + `jspdf-autotable` (passt zu IndexedDB-Architektur, keine Server-Round-Trips). Logo aus `Settings.logoDataUrl`, falls vorhanden.
 
-Mitgliedsstatus: `pending` → `active` → `terminating` → `terminated` (oder `rejected`).
-Lot-Status: `pending_payment` → `active` → `terminating` → `transferred` / `repaid`.
+Ablage: über bestehenden `documents.service.uploadDocument` als `DocumentRecord` mit:
+- `memberId` = Empfänger
+- `category: "Sonstiges"` (oder neue Kategorie `"Steuerbescheinigung"` ergänzen)
+- `visibility: "internal"`, `visibleToMember: true`
+- `title: "Steuerbescheinigung Dividende GJ {jahr}"`
 
-## Manuelles Anlegen von Mitgliedern
+`documentId` wird ins jeweilige `DividendRun.items[]` zurückgeschrieben.
 
-Route `_app/mitglieder.neu.tsx` (Rolle `mitgliederverwalter`/`admin`):
-- Gleiches Formular wie öffentliche Anmeldung, mehrspaltig
-- Optionen: „Sofort aktiv setzen" (überspringt Approval, Audit-Notiz), „Zahlung bereits eingegangen"
-- Inline-Doc-Upload (z.B. unterschriebener Beitrittsantrag)
+## 4. UI-Änderungen
 
-## Dokumenten-Modul
+**Dividenden-Seite (`/app/dividenden`):**
+- Vorschau zeigt jetzt vier Spalten je Mitglied: Brutto · KapESt+Soli · KiSt · Netto.
+- „Berechnen & speichern" erzeugt Lauf + alle PDFs (Progress-Toast „PDFs werden erzeugt…").
+- In der Lauf-Detailansicht: pro Mitglied ein Download-Button für die Bescheinigung.
+- Lauf löschen: zugehörige Bescheinigungs-Dokumente werden mit gelöscht.
 
-**Globale Dokumente** – Route `_app/dokumente.tsx` (Upload: `admin`, optional `kommunikation`):
-- Felder: Titel, Beschreibung, Datei, Kategorie (Satzung, Geschäftsbericht, Protokoll, Sonstiges), `visibility`: `public` | `members` | `internal`
-- `public` → erreichbar unter `/dokumente/$slug` ohne Login (z.B. Satzung) und einbettbar im Anmeldeformular
-- `members` → nur eingeloggte Mitglieder
-- `internal` → nur Verwaltungs-Rollen
-- V1: einfacher Replace mit Versions-Notiz
+**Mitglieds-Detail:**
+- Neuer Tab/Block „Steuer" (Freistellung, Konfession, Bundesland, Steuer-ID).
+- In der Dividenden-Liste pro Mitglied: Spalten Brutto/Netto + Link auf PDF.
 
-**Mitglieds-Dokumente** – Tab im Mitglied-Detail:
-- Zugriff: Mitglied selbst (nur als „mitgliedssichtbar" markierte), `mitgliederverwalter`, `vorstand`, `admin`
-- Kategorien: Beitrittsantrag, Ausweiskopie, SEPA-Mandat, Kündigung, Sonstiges
+**Admin → Stammdaten (neu):**
+- Eingabe der Aussteller-Daten gemäß Settings-Block oben.
+- Wird in den Tab-Reiter oben eingereiht (zwischen „Konto" und „Branding").
 
-**Speicherung V1**: Datei als `Blob` in IndexedDB (`documents` + `documentFiles`). Warnung bei >5 MB. Service-Interface so geschnitten, dass spätere Migration auf REST/S3-Signed-URLs nur den Service tauscht.
+## 5. Migration / Defaults
 
-## Daten-Layer
+- Beim ersten Laden: bestehende Mitglieder bekommen `freistellung=false`, `konfession="keine"`, `bundesland` = Default `"NW"` (kann global im Settings-Tab gesetzt werden, ergänzen wir als Default-Wert).
+- Bestehende Dividendenläufe: nicht rückwirkend neu berechnen. In der UI kennzeichnen als „ohne Steuerabzug (alt)" und Bescheinigungs-Button ausgeblendet.
+- Settings.genossenschaft: leer → Hinweis-Banner auf Dividenden-Seite „Bitte zuerst Stammdaten der Genossenschaft pflegen, sonst keine korrekten Bescheinigungen".
 
-```
-src/services/
-  db.ts                    # IndexedDB-Schema
-  users.service.ts
-  members.service.ts       # CRUD, Status-Maschine
-  shares.service.ts        # Lots, Splitting, Statuswechsel
-  transfers.service.ts     # Verkauf/Spende mit Approval
-  terminations.service.ts  # Kündigungen für membership + share, Stichtagslogik
-  documents.service.ts     # global + Mitglieds-Dokumente
-  dividends.service.ts
-  campaigns.service.ts
-  sepa.service.ts          # inkl. Anteilsrückzahlung
-  settings.service.ts      # Branding, Anteilswert, Workflow- & Kündigungs-Konfig
-  customFields.service.ts
-  audit.service.ts
-  seed.ts
-src/services/api/          # REST-Stubs
-src/lib/termination.ts     # reine Funktion: berechne frühesten Austrittstermin aus Konfig + Eingangs-/Beitrittsdatum
-```
+## 6. Audit
 
-Stores: `users`, `members`, `shareLots`, `shareTransfers`, `terminations`, `approvals`, `paymentConfirmations`, `documents`, `documentFiles`, `campaigns`, `dividends`, `settings`, `customFields`, `workflowConfig`, `auditLog`.
+- Pro Lauf: Audit-Eintrag wie bisher, zusätzlich „N Bescheinigungen erstellt" und Summen Brutto/Netto/Steuern.
+- Pro PDF: kein extra Eintrag (zu lärmig); Lauf-Eintrag genügt.
 
-Hintergrund-Job (Client-seitig beim App-Start + nach Login): prüft `terminating`-Datensätze und setzt fällige auf `terminated`, erzeugt Auszahlungsposten gemäß Konfig.
+## Technische Notizen
 
-## Routenstruktur
+- Neue Dependency: `jspdf` + `jspdf-autotable` (clientseitig, keine Worker-Constraints relevant).
+- `dividends.service.calcDividend` wird um Steuer-Berechnung erweitert; Member-Lookup wird in die Berechnung gezogen, weil Steuersätze pro Mitglied unterschiedlich sind.
+- PDF-Erzeugung als eigene Datei `src/lib/dividend-certificate.ts` (pure function `buildCertificatePdf(...)` → `Blob`).
+- Kategorie `"Steuerbescheinigung"` zu `DocCategory` ergänzen, sonst bleibt Dokumenten-Pipeline unverändert.
+- Vereinfachungen, die wir dokumentieren: keine KapESt-Minderung durch KiSt-Sonderausgabenabzug, kein Sparer-Pauschbetrag, kein NV-Bescheinigungs-Workflow – diese Optionen können später nachgezogen werden.
 
-```
-src/routes/
-  __root.tsx
-  index.tsx
-  anmeldung.tsx
-  embed.anmeldung.tsx
-  dokumente.$slug.tsx                # öffentliche Dokumente
-  _app.tsx
-  _app/dashboard.tsx
-  _app/mitglieder.index.tsx
-  _app/mitglieder.neu.tsx
-  _app/mitglieder.$id.tsx
-  _app/anteile.tsx
-  _app/dokumente.tsx
-  _app/kommunikation.index.tsx
-  _app/kommunikation.neu.tsx
-  _app/dividenden.tsx
-  _app/sepa.tsx
-  _app/admin.branding.tsx
-  _app/admin.anteile.tsx
-  _app/admin.felder.tsx
-  _app/admin.konto.tsx
-  _app/admin.workflow.tsx            # inkl. getrennte Kündigungsperioden
-  _app/admin.users.tsx
-```
+## Offen / explizit ausgeklammert
 
-## Branding & Locale
-
-`BrandingProvider` setzt CSS-Variablen aus Settings (Logo-Blob, Primär-/Akzentfarbe in oklch). UI deutsch, EUR via `Intl`. Land Dropdown DE/AT/CH (in Admin konfigurierbar). SEPA nutzt eingestelltes Land der Genossenschaft.
-
-## Demo-Daten
-
-- 1 Genossenschaft („Demo Energie eG"), Standard-Branding
-- Workflow-Default: 3 Beitritts-Bestätigungen + Zahlung
-- Kündigung Mitgliedschaft: 3 Monate zum Jahresende, Mindesthaltedauer 24 Monate, Auszahlung nach Bilanzfeststellung
-- Kündigung Anteile: 3 Monate zum Quartalsende, Mindesthaltedauer 0, Auszahlung sofort
-- 8 Demo-User: Anna Mitglied / Bernd Vorstand+Bestätiger+Auszahler / Clara Vorstand+Bestätiger / Dieter Vorstand+Bestätiger+Kommunikation / Eva Aufsichtsrat / Frank Zahlungsprüfer+Auszahler / Gabi Mitgliederverwalter / Greta Admin
-- 25 Mitglieder gemischt (active/pending/terminating), ~50 Lots, 1 Dividendenlauf, 2 Newsletter, 3 globale Dokumente (Satzung public, Geschäftsbericht members, Protokoll internal)
-
-## Akzeptanzdurchlauf
-
-Anmeldung → 3 Bestätiger + Zahlung → aktiv → Greta verkürzt Anteils-Kündigungsfrist auf 1 Monat → Mitglied A kündigt 2 Anteile → Vorschau zeigt neuen Stichtag → Gabi bestätigt → SEPA-Lauf zahlt zurück → Mitglied B verkauft Anteile an Mitglied C → Mitglied C kündigt Mitgliedschaft zum Jahresende → Satzung unter `/dokumente/satzung` ohne Login erreichbar.
-
-## Out of Scope V1
-
-- Echtes Auth/SSO
-- Tatsächlicher E-Mail-Versand
-- Bank-Import
-- Mehrsprachigkeit, Mehrmandantenfähigkeit
-- Dokumenten-Versionsdiff
+- Zusammenveranlagung (2.000 €) – nicht modellierbar ohne Ehegatten-Verknüpfung.
+- Sparer-Pauschbetrag in Euro – bewusst durch „Freistellung ja/nein" ersetzt (Wunsch).
+- Echte elektronische Übermittlung an Finanzamt (BZSt) – out of scope.

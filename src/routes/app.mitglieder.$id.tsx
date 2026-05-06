@@ -43,7 +43,15 @@ import { calcEffectiveDate } from "@/lib/termination";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { can } from "@/lib/permissions";
 import { formatDate, formatDateTime, formatEuro, memberStatusLabel, lotStatusLabel, transferStatusLabel, terminationStatusLabel } from "@/lib/locale";
-import { ROLE_LABELS, type DocCategory, type Member } from "@/lib/types";
+import {
+  ROLE_LABELS,
+  BUNDESLAND_LABELS,
+  KONFESSION_LABELS,
+  type Bundesland,
+  type DocCategory,
+  type Konfession,
+  type Member,
+} from "@/lib/types";
 
 export const Route = createFileRoute("/app/mitglieder/$id")({
   component: MemberDetailPage,
@@ -323,9 +331,11 @@ function MemberDetailPage() {
               ) : (
                 <>
                   <div className="mb-3 flex items-center justify-between border-b pb-2">
-                    <span className="font-medium">Insgesamt erhalten</span>
+                    <span className="font-medium">Insgesamt erhalten (brutto / netto)</span>
                     <span className="font-semibold">
                       {formatEuro((divQ.data ?? []).reduce((s, d) => s + d.total, 0))}
+                      {" / "}
+                      {formatEuro((divQ.data ?? []).reduce((s, d) => s + d.items.reduce((a, i) => a + (i.net ?? i.amount), 0), 0))}
                     </span>
                   </div>
                   <div className="space-y-2">
@@ -338,13 +348,37 @@ function MemberDetailPage() {
                               Lauf vom {formatDate(d.run.createdAt)} · {d.items.length} Lot(s)
                             </div>
                           </div>
-                          <div className="text-right font-semibold">{formatEuro(d.total)}</div>
+                          <div className="text-right">
+                            <div className="font-semibold">{formatEuro(d.total)} brutto</div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatEuro(d.items.reduce((s, i) => s + (i.net ?? i.amount), 0))} netto
+                            </div>
+                            {d.run.certificates?.[m.id] && (
+                              <button
+                                type="button"
+                                className="mt-1 text-xs text-primary hover:underline"
+                                onClick={async () => {
+                                  const certId = d.run.certificates?.[m.id];
+                                  if (!certId) return;
+                                  const r = await downloadDocument(certId);
+                                  if (r) window.open(r.url, "_blank");
+                                }}
+                              >
+                                Steuerbescheinigung (PDF)
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="mt-2 space-y-1 border-t pt-2 text-xs text-muted-foreground">
                           {d.items.map((it, idx) => (
                             <div key={idx} className="flex justify-between">
                               <span>Lot {it.lotId.slice(0, 6)} · {it.days} Tage</span>
-                              <span>{formatEuro(it.amount)}</span>
+                              <span>
+                                {formatEuro(it.amount)}
+                                {it.net !== undefined && it.net !== it.amount && (
+                                  <span className="ml-2 text-[11px]">(netto {formatEuro(it.net)})</span>
+                                )}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -393,6 +427,7 @@ function Row({ label, ok }: { label: string; ok: boolean }) {
 function StammForm({ member, canEdit, onSave }: { member: Member; canEdit: boolean; onSave: (m: Member) => void | Promise<void> }) {
   const [m, setM] = useState(member);
   return (
+    <div className="space-y-4">
     <Card>
       <CardContent className="grid gap-4 p-6 md:grid-cols-2">
         {([
@@ -412,9 +447,77 @@ function StammForm({ member, canEdit, onSave }: { member: Member; canEdit: boole
             <Input disabled={!canEdit} value={(m[k] as string) ?? ""} onChange={(e) => setM({ ...m, [k]: e.target.value })} />
           </div>
         ))}
-        {canEdit && <div className="md:col-span-2"><Button onClick={() => onSave({ ...m, updatedAt: new Date().toISOString() })}>Speichern</Button></div>}
       </CardContent>
     </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>Steuerliche Angaben</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Bestimmt den Steuerabzug bei der Dividendenausschüttung (Kapitalertragsteuer 25 %, Solidaritätszuschlag 5,5 %, ggf. Kirchensteuer 8/9 %).
+        </p>
+      </CardHeader>
+      <CardContent className="grid gap-4 p-6 md:grid-cols-2">
+        <div className="md:col-span-2 flex items-center gap-2">
+          <input
+            id="freistellung"
+            type="checkbox"
+            disabled={!canEdit}
+            checked={!!m.freistellung}
+            onChange={(e) => setM({ ...m, freistellung: e.target.checked })}
+          />
+          <Label htmlFor="freistellung" className="font-normal">
+            Freistellungsauftrag liegt vor – kein Steuerabzug
+          </Label>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Konfession</Label>
+          <Select
+            disabled={!canEdit || !!m.freistellung}
+            value={m.konfession ?? "keine"}
+            onValueChange={(v) => setM({ ...m, konfession: v as Konfession })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(KONFESSION_LABELS) as Konfession[]).map((k) => (
+                <SelectItem key={k} value={k}>{KONFESSION_LABELS[k]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Bundesland (für Kirchensteuer)</Label>
+          <Select
+            disabled={!canEdit || !!m.freistellung}
+            value={m.bundesland ?? ""}
+            onValueChange={(v) => setM({ ...m, bundesland: v as Bundesland })}
+          >
+            <SelectTrigger><SelectValue placeholder="– bitte wählen –" /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(BUNDESLAND_LABELS) as Bundesland[]).map((b) => (
+                <SelectItem key={b} value={b}>{BUNDESLAND_LABELS[b]} ({b === "BY" || b === "BW" ? "8 %" : "9 %"})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="md:col-span-2 space-y-1.5">
+          <Label>Steuer-Identifikationsnummer (optional)</Label>
+          <Input
+            disabled={!canEdit}
+            value={m.steuerId ?? ""}
+            onChange={(e) => setM({ ...m, steuerId: e.target.value })}
+            placeholder="11 Ziffern"
+          />
+        </div>
+      </CardContent>
+    </Card>
+
+    {canEdit && (
+      <div>
+        <Button onClick={() => onSave({ ...m, updatedAt: new Date().toISOString() })}>Speichern</Button>
+      </div>
+    )}
+    </div>
   );
 }
 
