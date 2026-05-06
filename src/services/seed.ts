@@ -1,4 +1,5 @@
 import { getAll, getOne, put, uid } from "./db";
+import { ensureSystemCustomFields } from "./customFields.service";
 import type {
   AppUser,
   CustomFieldDef,
@@ -141,11 +142,16 @@ function makeMember(i: number, status: Member["status"]): Member {
 
 export async function seedIfEmpty(): Promise<void> {
   const meta = await getOne<{ id: string; value: unknown }>("meta", SEED_FLAG);
-  if (meta) return;
+  if (meta) {
+    // Auch in bestehenden DBs sicherstellen, dass System-Felder existieren
+    await ensureSystemCustomFields();
+    return;
+  }
 
   await put("settings", { id: "singleton", data: defaultSettings });
   await put("workflowConfig", { id: "singleton", data: defaultWorkflow });
   for (const u of demoUsers) await put("users", u);
+  await ensureSystemCustomFields();
 
   const cf: CustomFieldDef = {
     id: uid(),
