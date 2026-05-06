@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSettings, saveSettings } from "@/services/settings.service";
 import type { NewsletterBranding, SignupBranding } from "@/lib/types";
 import { buildBrandedFooter, buildBrandedHeader, mergeNewsletterBranding, renderNewsletterHtml } from "@/lib/newsletter";
@@ -87,7 +88,15 @@ function BrandingAdmin() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Tabs defaultValue="branding" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="signup">Beitrittsformular</TabsTrigger>
+          <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="branding" className="space-y-6">
+          <Card>
         <CardHeader><CardTitle>Allgemein</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2"><Label>Name der Genossenschaft</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
@@ -115,8 +124,10 @@ function BrandingAdmin() {
           <ColorField label="Navigations-Textfarbe" value={sidebarForeground} onChange={setSidebarForeground} />
         </CardContent>
       </Card>
+        </TabsContent>
 
-      <Card>
+        <TabsContent value="signup" className="space-y-6">
+          <Card>
         <CardHeader><CardTitle>Öffentliches Beitrittsformular</CardTitle></CardHeader>
         <CardContent className="grid gap-4">
           <div className="flex items-center justify-between rounded border p-3">
@@ -204,17 +215,21 @@ function BrandingAdmin() {
         </CardContent>
       </Card>
 
+          <EmbedCard />
+        </TabsContent>
+
+        <TabsContent value="newsletter" className="space-y-6">
+          <NewsletterBrandingCard
+            value={newsletter}
+            onChange={setNewsletter}
+            previewSettings={{ genossenschaftsName: name, logoDataUrl: logo, primary, bank: q.data?.bank }}
+          />
+        </TabsContent>
+      </Tabs>
+
       <div className="flex justify-end">
         <Button onClick={save}>Alle Änderungen speichern</Button>
       </div>
-
-      <EmbedCard />
-
-      <NewsletterBrandingCard
-        value={newsletter}
-        onChange={setNewsletter}
-        previewSettings={{ genossenschaftsName: name, logoDataUrl: logo, primary, bank: q.data?.bank }}
-      />
     </div>
   );
 }
