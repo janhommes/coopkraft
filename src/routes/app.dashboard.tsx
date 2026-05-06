@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listMembers, listApprovals, listPaymentConfirmations } from "@/services/members.service";
 import { listLots } from "@/services/shares.service";
 import { listTerminations } from "@/services/terminations.service";
+import { listDividendRuns } from "@/services/dividends.service";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,7 @@ function DashboardPage() {
   const apprQ = useQuery({ queryKey: ["approvals"], queryFn: listApprovals });
   const payQ = useQuery({ queryKey: ["payments"], queryFn: listPaymentConfirmations });
   const termQ = useQuery({ queryKey: ["terminations"], queryFn: listTerminations });
+  const divQ = useQuery({ queryKey: ["dividends"], queryFn: listDividendRuns });
 
   if (!user) return null;
 
@@ -83,6 +85,8 @@ function DashboardPage() {
   const showVorstandCharts = user.roles.some((r) => r === "vorstand" || r === "aufsichtsrat" || r === "admin");
   const memberSeries = showVorstandCharts ? buildMemberGrowthSeries(members) : [];
   const capitalSeries = showVorstandCharts ? buildCapitalSeries(lots) : [];
+  const dividendRuns = (divQ.data ?? []).slice().sort((a, b) => a.fiscalYear - b.fiscalYear);
+  const totalDividends = dividendRuns.reduce((s, r) => s + r.totalAmount, 0);
 
   return (
     <div className="space-y-6">
@@ -105,6 +109,13 @@ function DashboardPage() {
         <KPI label="In Kündigung" value={String(terminating.length)} sub={`${openTerminations.length} offene Anträge`} />
         <KPI label="Zahlungen offen" value={String(payQ.data ? openPayments.length : 0)} sub="Erwartete Eingänge" />
         <KPI label="Meine Bestätigungen" value={String(user.roles.includes("mitgliedsbestaetiger") ? myConfirmsToDo.length : 0)} sub="Wartet auf dich" />
+        {showVorstandCharts && (
+          <KPI
+            label="Dividenden ausgeschüttet"
+            value={formatEuro(totalDividends)}
+            sub={`${dividendRuns.length} Lauf/Läufe`}
+          />
+        )}
       </div>
 
       {showVorstandCharts && (
