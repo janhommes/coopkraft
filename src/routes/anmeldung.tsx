@@ -1,23 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { AnmeldungForm } from "@/components/anmeldung/AnmeldungForm";
 import { Logo } from "@/components/layout/Logo";
+import { getSettings } from "@/services/settings.service";
 
 export const Route = createFileRoute("/anmeldung")({
   component: AnmeldungPage,
 });
 
 function AnmeldungPage() {
+  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: getSettings });
+  const showLogo = settings?.signup?.showLogo ?? true;
+  const intro = settings?.signup?.intro;
+  const customCss = settings?.signup?.customCss;
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background px-4 py-4 md:px-8">
-        <Logo />
-      </header>
+    <div className="signup-page min-h-screen bg-muted/30">
+      {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
+      {showLogo && (
+        <header className="signup-header border-b bg-background px-4 py-4 md:px-8">
+          <Logo />
+        </header>
+      )}
       <main className="mx-auto max-w-3xl px-4 py-10 md:py-16">
-        <h1 className="text-3xl font-bold tracking-tight">Mitglied werden</h1>
-        <p className="mt-2 text-muted-foreground">
-          Werde Teil unserer Energiegenossenschaft. Die Mitgliedschaft wird nach
-          Eingang von 3 Bestätigungen und Zahlungseingang aktiv.
-        </p>
+        <h1 className="signup-title text-3xl font-bold tracking-tight">Mitglied werden</h1>
+        {intro && (
+          <div className="signup-intro mt-2 whitespace-pre-line text-muted-foreground">{intro}</div>
+        )}
         <div className="mt-8">
           <AnmeldungForm />
         </div>
