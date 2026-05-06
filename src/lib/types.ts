@@ -288,8 +288,10 @@ export interface Settings {
   genossenschaftsName: string;
   /** Logo als data-URL */
   logoDataUrl?: string;
-  primary: string; // oklch(...)
-  accent: string; // oklch(...)
+  primary: string;
+  accent: string;
+  background?: string;
+  sidebarBackground?: string;
   anteilsWert: number;
   minAnteile: number;
   maxAnteile: number;
@@ -303,4 +305,16 @@ export interface Settings {
   laenderReihenfolge: Land[];
   defaultLand: Land;
   fiscalYearEndMonth: number; // 12 = Dezember
+  signup?: SignupBranding;
+}
+
+export interface SignupBranding {
+  /** Einleitungstext oberhalb des Formulars (Markdown-light: Zeilenumbrüche bleiben erhalten) */
+  intro?: string;
+  /** Logo im öffentlichen Anmeldeformular anzeigen */
+  showLogo: boolean;
+  /** Layout: 'stepper' = mehrstufig, 'single' = ein langes Formular */
+  layout: "stepper" | "single";
+  /** Eigenes CSS, wird nur auf der öffentlichen Anmelde-Seite injiziert */
+  customCss?: string;
 }
