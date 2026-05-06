@@ -160,13 +160,15 @@ function KommPage() {
     if (!user) return;
     if (!subject) { toast.error("Betreff fehlt"); return; }
     if (audienceMode === "custom" && selectedIds.length === 0) { toast.error("Bitte mindestens ein Mitglied auswählen"); return; }
-    const finalHtml = type === "newsletter"
-      ? renderNewsletterHtml({ subject, bodyHtml: body, branding: settings?.newsletter })
-      : body;
+    if (eventEnabled && (!eventTitle || !eventStart)) { toast.error("Termin: Titel und Start sind erforderlich"); return; }
+    const finalHtml = renderNewsletterHtml({ subject, bodyHtml: body, branding: settings?.newsletter });
     await createCampaign({
-      type,
+      type: "newsletter",
       subject,
       bodyHtml: finalHtml,
+      startsAt: eventEnabled ? new Date(eventStart).toISOString() : undefined,
+      endsAt: eventEnabled && eventEnd ? new Date(eventEnd).toISOString() : undefined,
+      location: eventEnabled ? eventLocation || undefined : undefined,
       audience: {
         newsletterOnly: audienceMode === "newsletter",
         statuses: ["active"],
