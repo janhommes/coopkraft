@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { UserSwitcher } from "@/components/layout/UserSwitcher";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -28,11 +28,7 @@ function AppLayout() {
           <div className="md:hidden">
             <Logo />
           </div>
-          <div className="hidden text-sm text-muted-foreground md:block">
-            <Link to="/anmeldung" className="underline-offset-2 hover:underline">
-              Öffentliches Beitrittsformular →
-            </Link>
-          </div>
+          <div className="hidden md:block" />
           <UserSwitcher />
         </header>
         <main className="min-w-0 flex-1 overflow-x-hidden p-4 md:p-6">
