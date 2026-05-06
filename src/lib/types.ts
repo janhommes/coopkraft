@@ -161,7 +161,7 @@ export interface PaymentConfirmation {
 }
 
 export type TerminationTarget = "membership" | "share";
-export type TerminationStatus = "pending" | "approved" | "rejected" | "completed";
+export type TerminationStatus = "pending" | "approved" | "rejected" | "completed" | "cancelled";
 
 export interface Termination {
   id: string;
