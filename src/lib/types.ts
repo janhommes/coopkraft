@@ -292,6 +292,8 @@ export interface Settings {
   accent: string;
   background?: string;
   sidebarBackground?: string;
+  foreground?: string;
+  sidebarForeground?: string;
   anteilsWert: number;
   minAnteile: number;
   maxAnteile: number;
