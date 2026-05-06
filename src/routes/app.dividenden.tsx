@@ -127,6 +127,46 @@ function DivPage() {
           <Button onClick={create} disabled={busy}>{busy ? "Erstelle…" : "Berechnen & speichern"}</Button>
         </CardContent>
       </Card>
+      {missingTaxMembers.length > 0 && (
+        <Card className="border-amber-300 bg-amber-50/60">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-900">
+              <AlertTriangle className="h-4 w-4" />
+              Fehlende Steuerangaben ({missingTaxMembers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-amber-900">
+            <p>
+              Bei den folgenden empfangenden Mitgliedern fehlen Bundesland und/oder Konfession.
+              Es wird automatisch <strong>keine Kirchensteuer</strong> abgezogen. Bitte vor dem Lauf
+              Stammdaten ergänzen, falls die Person kirchensteuerpflichtig ist.
+            </p>
+            <ul className="space-y-1">
+              {missingTaxMembers.map((m) => {
+                const fehlt: string[] = [];
+                if (!m.bundesland) fehlt.push("Bundesland");
+                if (!m.konfession) fehlt.push("Konfession");
+                return (
+                  <li key={m.id} className="flex items-center justify-between gap-2 rounded border border-amber-200 bg-white/70 px-2 py-1">
+                    <span className="truncate">
+                      Nr. {m.mitgliedsnummer} – {m.vorname} {m.nachname}
+                      <span className="ml-2 text-xs text-amber-700">fehlt: {fehlt.join(", ")}</span>
+                    </span>
+                    <a
+                      href={`/app/mitglieder/${m.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    >
+                      Pflegen <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
       {agg && (
         <Card>
           <CardHeader><CardTitle>Vorschau pro Mitglied</CardTitle></CardHeader>
