@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSettings } from "@/services/settings.service";
-import { listCustomFields } from "@/services/customFields.service";
+import { listCustomFields, validateCustomFields } from "@/services/customFields.service";
 import { createMember } from "@/services/members.service";
 import { createLot } from "@/services/shares.service";
 import { isValidIban } from "@/services/sepa.service";
@@ -57,6 +57,7 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
   const layout: "stepper" | "single" = layoutOverride ?? settings?.signup?.layout ?? "stepper";
   const [step, setStep] = useState(0);
   const [done, setDone] = useState<{ name: string; nummer: number } | null>(null);
+  const [cfErrors, setCfErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<FormState>({
     typ: "Privatperson",
     anrede: "Frau",
@@ -86,17 +87,18 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
   const submitMut = useMutation({
     mutationFn: async () => {
       if (!settings) throw new Error("Konfiguration nicht geladen");
+      const cf = state.custom;
       const member = await createMember(
         {
           typ: state.typ,
           anrede: state.anrede,
-          titel: state.titel || undefined,
+          titel: ((cf.titel as string) || state.titel) || undefined,
           vorname: state.vorname.trim(),
           nachname: state.nachname.trim(),
-          firma: state.firma || undefined,
-          geburtsdatum: state.geburtsdatum || undefined,
+          firma: ((cf.firma as string) || state.firma) || undefined,
+          geburtsdatum: ((cf.geburtsdatum as string) || state.geburtsdatum) || undefined,
           email: state.email.trim(),
-          telefon: state.telefon || undefined,
+          telefon: ((cf.telefon as string) || state.telefon) || undefined,
           strasse: state.strasse,
           hausnummer: state.hausnummer,
           plz: state.plz,
@@ -105,7 +107,7 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
           iban: state.iban.replace(/\s+/g, ""),
           bic: state.bic,
           kontoinhaber: state.kontoinhaber || `${state.vorname} ${state.nachname}`,
-          newsletter: state.newsletter,
+          newsletter: cf.newsletter !== undefined ? !!cf.newsletter : state.newsletter,
           customFields: state.custom,
         },
         null,
