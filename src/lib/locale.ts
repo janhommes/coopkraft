@@ -29,3 +29,37 @@ export const LAND_LABELS: Record<string, string> = {
   AT: "Österreich",
   CH: "Schweiz",
 };
+
+export const MEMBER_STATUS_LABELS: Record<string, string> = {
+  pending: "Ausstehend",
+  active: "Aktiv",
+  terminating: "In Kündigung",
+  terminated: "Beendet",
+  rejected: "Abgelehnt",
+};
+
+export const LOT_STATUS_LABELS: Record<string, string> = {
+  pending_payment: "Zahlung offen",
+  active: "Aktiv",
+  terminating: "In Kündigung",
+  transferred: "Übertragen",
+  repaid: "Ausgezahlt",
+};
+
+export const TERMINATION_STATUS_LABELS: Record<string, string> = {
+  pending: "Ausstehend",
+  approved: "Genehmigt",
+  rejected: "Abgelehnt",
+  completed: "Abgeschlossen",
+};
+
+export const TRANSFER_STATUS_LABELS: Record<string, string> = {
+  pending: "Ausstehend",
+  approved: "Genehmigt",
+  rejected: "Abgelehnt",
+};
+
+export const memberStatusLabel = (s: string): string => MEMBER_STATUS_LABELS[s] ?? s;
+export const lotStatusLabel = (s: string): string => LOT_STATUS_LABELS[s] ?? s;
+export const terminationStatusLabel = (s: string): string => TERMINATION_STATUS_LABELS[s] ?? s;
+export const transferStatusLabel = (s: string): string => TRANSFER_STATUS_LABELS[s] ?? s;

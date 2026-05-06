@@ -8,7 +8,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { can } from "@/lib/permissions";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { formatDate } from "@/lib/locale";
+import { formatDate, memberStatusLabel } from "@/lib/locale";
 import type { MemberStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/app/mitglieder/")({
@@ -51,7 +51,7 @@ function MembersPage() {
         <Input className="max-w-xs" placeholder="Suche…" value={search} onChange={(e) => setSearch(e.target.value)} />
         {(["all", "pending", "active", "terminating", "terminated", "rejected"] as const).map((s) => (
           <Button key={s} size="sm" variant={filter === s ? "default" : "outline"} onClick={() => setFilter(s)}>
-            {s === "all" ? "Alle" : s}
+            {s === "all" ? "Alle" : memberStatusLabel(s)}
           </Button>
         ))}
       </div>
@@ -80,7 +80,7 @@ function MembersPage() {
                   <td className="p-3 text-muted-foreground">{m.email}</td>
                   <td className="p-3 text-muted-foreground">{m.ort}</td>
                   <td className="p-3 text-muted-foreground">{formatDate(m.beitrittDatum)}</td>
-                  <td className="p-3"><Badge className={STATUS_COLORS[m.status]}>{m.status}</Badge></td>
+                  <td className="p-3"><Badge className={STATUS_COLORS[m.status]}>{memberStatusLabel(m.status)}</Badge></td>
                 </tr>
               ))}
               {list.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Keine Mitglieder</td></tr>}
