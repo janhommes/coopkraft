@@ -21,7 +21,6 @@ import {
   createDividendRun,
   aggregateByMember,
   deleteDividendRun,
-  applyTaxes,
 } from "@/services/dividends.service";
 import { listMembers } from "@/services/members.service";
 import { downloadDocument } from "@/services/documents.service";
@@ -187,11 +186,11 @@ function DivPage() {
 }
 
 function RunDetails({ run, memberMap }: { run: DividendRun; memberMap: Map<string, Member> }) {
-  // Aggregate per Mitglied
-  const perMember = new Map<string, { total: number; count: number }>();
+  const perMember = new Map<string, { gross: number; net: number; count: number }>();
   for (const it of run.items) {
-    const e = perMember.get(it.memberId) ?? { total: 0, count: 0 };
-    e.total += it.amount;
+    const e = perMember.get(it.memberId) ?? { gross: 0, net: 0, count: 0 };
+    e.gross += it.gross ?? it.amount;
+    e.net += it.net ?? it.amount;
     e.count += 1;
     perMember.set(it.memberId, e);
   }
@@ -199,21 +198,30 @@ function RunDetails({ run, memberMap }: { run: DividendRun; memberMap: Map<strin
     .map(([memberId, v]) => ({
       memberId,
       member: memberMap.get(memberId),
-      total: +v.total.toFixed(2),
+      gross: +v.gross.toFixed(2),
+      net: +v.net.toFixed(2),
       count: v.count,
+      certId: run.certificates?.[memberId],
     }))
-    .sort((a, b) => b.total - a.total);
+    .sort((a, b) => b.gross - a.gross);
 
   return (
     <div className="border-t bg-muted/30 p-3">
-      <div className="mb-2 grid grid-cols-[1fr_auto_auto] gap-3 px-2 text-xs font-medium text-muted-foreground">
+      {run.totals && (
+        <div className="mb-2 px-2 text-xs text-muted-foreground">
+          Brutto {formatEuro(run.totals.gross)} · KapESt {formatEuro(run.totals.kapest)} · Soli {formatEuro(run.totals.soli)} · KiSt {formatEuro(run.totals.kist)} · Netto {formatEuro(run.totals.net)}
+        </div>
+      )}
+      <div className="mb-2 grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 px-2 text-xs font-medium text-muted-foreground">
         <span>Mitglied</span>
         <span className="text-right">Lots</span>
-        <span className="text-right">Auszahlung</span>
+        <span className="text-right">Brutto</span>
+        <span className="text-right">Netto</span>
+        <span className="text-right">PDF</span>
       </div>
       <div className="space-y-1">
         {rows.map((r) => (
-          <div key={r.memberId} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded px-2 py-1.5 hover:bg-accent">
+          <div key={r.memberId} className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3 rounded px-2 py-1.5 hover:bg-accent">
             <div className="truncate">
               {r.member ? (
                 <Link
@@ -228,7 +236,24 @@ function RunDetails({ run, memberMap }: { run: DividendRun; memberMap: Map<strin
               )}
             </div>
             <span className="text-right text-xs text-muted-foreground">{r.count}</span>
-            <span className="text-right font-medium">{formatEuro(r.total)}</span>
+            <span className="text-right">{formatEuro(r.gross)}</span>
+            <span className="text-right font-medium">{formatEuro(r.net)}</span>
+            <span className="text-right">
+              {r.certId ? (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  onClick={async () => {
+                    const d = await downloadDocument(r.certId!);
+                    if (d) window.open(d.url, "_blank");
+                  }}
+                >
+                  <FileText className="h-3.5 w-3.5" /> PDF
+                </button>
+              ) : (
+                <span className="text-xs text-muted-foreground">–</span>
+              )}
+            </span>
           </div>
         ))}
       </div>
