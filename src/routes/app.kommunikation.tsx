@@ -37,9 +37,14 @@ function KommPage() {
   const qc = useQueryClient();
   const camps = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
   const members = useQuery({ queryKey: ["members"], queryFn: listMembers });
-  const [type, setType] = useState<CampaignType>("newsletter");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [eventEnabled, setEventEnabled] = useState(false);
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventStart, setEventStart] = useState("");
+  const [eventEnd, setEventEnd] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
   const [audienceMode, setAudienceMode] = useState<"newsletter" | "all" | "custom">("newsletter");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
