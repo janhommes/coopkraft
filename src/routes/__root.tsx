@@ -45,11 +45,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Genossenschaft – Mitgliederverwaltung" },
-      { name: "description", content: "Mitglieder, Anteile, Dividenden und Kommunikation für Energiegenossenschaften" },
+      { name: "description", content: "Community Connect is a customizable member management application for energy cooperatives." },
       { property: "og:title", content: "Genossenschaft – Mitgliederverwaltung" },
-      { property: "og:description", content: "Mitglieder, Anteile, Dividenden und Kommunikation" },
+      { property: "og:description", content: "Community Connect is a customizable member management application for energy cooperatives." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Genossenschaft – Mitgliederverwaltung" },
+      { name: "twitter:description", content: "Community Connect is a customizable member management application for energy cooperatives." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/852f2cfc-dc17-4aa0-962f-48b15ec384db/id-preview-d7c3db14--bc8803d2-e1cc-4166-9ede-5b8d6f4d9efc.lovable.app-1778100667927.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/852f2cfc-dc17-4aa0-962f-48b15ec384db/id-preview-d7c3db14--bc8803d2-e1cc-4166-9ede-5b8d6f4d9efc.lovable.app-1778100667927.png" },
     ],
     links: [
       {
