@@ -1,81 +1,75 @@
-# Custom Fields & Stammdaten neu strukturieren
+# Zweite Navigation für die Administration
 
-## 1. Definitive Stammdaten (bleiben fest am Mitglied)
+## Was sich ändert
 
-Diese Felder bleiben hart im `Member`-Datenmodell, weil sie für Geschäftsprozesse (SEPA, Steuerbescheinigung, Briefe, Anrede) zwingend gebraucht werden:
+- Die Tab-Leiste mit den Scroll-Pfeilen verschwindet komplett.
+- Stattdessen erscheint eine senkrechte Unter-Navigation als **zweite Spalte links** neben dem Inhalt.
+- Die neun Punkte sind in **vier Gruppen** mit Zwischenüberschriften gegliedert.
+- Der gerade offene Punkt wird wie in der Haupt-Navigation markiert: hervorgehobener Hintergrund plus linker Farbbalken.
+- Auf dem Handy bleibt das **Auswahlfeld** – es steht dann direkt über dem Inhalt.
+- Über dem Inhalt steht künftig der Name der offenen Unterteilung (z. B. „Branding"), darüber klein „Administration". So weiß man auch ohne Tabs, wo man ist.
 
-- **Identität**: Mitgliedsnummer, Status, Typ (Person/Firma), Anrede, Vorname, Nachname
-- **Kontakt**: E-Mail
-- **Adresse** (für Steuerbescheinigung & Post): Straße, Hausnummer, PLZ, Ort, Land
-- **Bankverbindung** (für SEPA): IBAN, BIC, Kontoinhaber
-- **Steuerblock** (für KapESt-Lauf): Freistellung, Konfession, Bundesland, Steuer-ID
-- **System**: Beitritts-/Austrittsdatum, Kündigungsgrund
+## Aufbau
 
-## 2. Verschoben in Custom Fields (System-Definitionen)
+```text
+Desktop (ab md-Breite)
++------------------+------------------------------------------+
+| Haupt-Navigation | Administration                           |
+| (unverändert)    |                                          |
+|                  |  AUFTRITT                                |
+|  Dashboard       |  Branding            <- aktiv, markiert  |
+|  Mitglieder      |  Beitrittsformular                       |
+|  Anteile         |  Newsletter                              |
+|  Dokumente       |                                          |
+|  Kommunikation   |  MITGLIEDER & ANTEILE                    |
+|  Dividenden      |  Anteile                                 |
+|  SEPA-Lauf       |  Benutzerdefinierte Felder               |
+|  Admin  (aktiv)  |                                          |
+|                  |  FINANZEN                                |
+|                  |  Bankkonto                               |
+|                  |  Stammdaten                              |
+|                  |                                          |
+|                  |  SYSTEM                                  |
+|                  |  Workflows & Kündigung                   |
+|                  |  Benutzer & Rollen                       |
++------------------+------------------------------------------+
 
-Diese bisher festen Felder werden zu System-Custom-Fields:
-`titel`, `bevorzugteAnrede`, `firma`, `geburtsdatum`, `telefon`, `newsletter`
+Mobil
++----------------------------------+
+| Administration                   |
+| Branding                         |
+| [ Unterteilung auswählen  v ]    |
+| Inhalt des gewählten Punkts      |
++----------------------------------+
+```
 
-- Sie bleiben technisch im `Member`-Typ (kein Datenverlust, keine Migration), werden aber in der UI **nicht** mehr im festen Stammdaten-Block angezeigt.
-- Beim ersten Start legt `seed.ts` passende `CustomFieldDef`-Einträge mit `system: true` an (Schlüssel = bisheriger Feldname). Der Save-Handler im Mitglied schreibt die Werte aus `customFields[key]` zurück in die nativen Felder, damit Anmeldeformular, SEPA, Newsletter etc. unverändert weiterlaufen.
-- Bestehende Daten in `m.telefon` etc. werden beim Anzeigen automatisch als Initialwert für das Custom Field benutzt.
+## Gruppen
 
-## 3. Anzeige im Mitglied (Stammdaten-Tab)
+| Gruppe | Punkte |
+| --- | --- |
+| Auftritt | Branding, Beitrittsformular, Newsletter |
+| Mitglieder & Anteile | Anteile, Benutzerdefinierte Felder |
+| Finanzen | Bankkonto, Stammdaten |
+| System | Workflows & Kündigung, Benutzer & Rollen |
 
-Unterhalb des bestehenden Adress-/Bank-Blocks und über dem Steuer-Block kommt eine neue Card **„Weitere Angaben"**:
+## Feinschliff
 
-- Listet alle `CustomFieldDef` (System + benutzerdefiniert) als passende Inputs (text/number/date/checkbox/select).
-- Pflichtfelder mit `*` markiert.
-- Beim Speichern werden Werte in `m.customFields[key]` geschrieben + bei System-Feldern in das native Feld gespiegelt.
-- Wenn keine Custom Fields definiert sind, wird die Card ausgeblendet.
+- Die linke Spalte bleibt beim Scrollen stehen (klebt oben), die Liste scrollt bei Bedarf selbst.
+- Lange Namen („Benutzerdefinierte Felder") dürfen in der Spalte umbrechen, damit nichts abgeschnitten wird.
+- Die Spalte nutzt die bestehende Farb-Abstimmung (abgeleitet aus deinem konfigurierten Hintergrund), keine neuen Farben.
+- Die Haupt-Navigation markiert „Admin" weiterhin als aktiv, egal welche Unterseite offen ist.
 
-## 4. Required-Validierung (überall)
+## Technische Umsetzung
 
-Neue zentrale Helper-Funktion `validateMember(m, defs)`:
-- Prüft alle Pflicht-`CustomFieldDef` gegen `m.customFields[key]` (leerer String / undefined / leere Auswahl = fehlt; Checkbox-required = muss true sein).
-- Wird benutzt in:
-  - **`AnmeldungForm`** vor `submitJoinRequest`
-  - **`StammForm`** vor `saveMember` im Mitglied-Detail
-- Fehler werden als roter Hinweis pro Feld + Toast angezeigt; Speichern wird blockiert.
-- Hartes Required gilt also auch für Bestandsmitglieder (gemäß Wunsch „Überall").
+- Geändert wird ausschließlich `src/routes/app.admin.tsx`. Die Unterseiten (`src/routes/app.admin.*.tsx`) bleiben unangetastet; URLs und Route-Struktur ändern sich nicht.
+- `items` wird zu `groups`: `{ label, items: [{ to, label }] }`. Eine flache Liste davon dient dem Select und der Aktiv-Erkennung.
+- Layout: `md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-8`; linke Spalte `md:sticky md:top-6 md:max-h-[calc(100vh-3rem)] md:overflow-y-auto`, Inhaltsseite `min-w-0`.
+- Gruppenüberschriften: `text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`.
+- Aktiver Link: `bg-sidebar-accent text-sidebar-accent-foreground` mit `border-l-2 border-primary`; Ruhezustand `hover:bg-accent`.
+- Entfernt: `overflow`-State, `scrollerRef`, `activeRef`, Scroll-Pfeile, beide `useEffect`-Blöcke und die `ChevronLeft`/`ChevronRight`-Importe. `useLocation` und `useNavigate` bleiben für das Select.
+- Titelblock: „Administration" als Eyebrow-Zeile, darunter `<h1>` mit dem Label des aktiven Punkts.
 
-## 5. Custom-Felder-Admin (`/app/admin/felder`)
+## Nicht enthalten
 
-UI-Erweiterung:
-- Spalte/Toggle **„Pflichtfeld"** im Anlage-Formular (Checkbox `required`) – ist im Datenmodell schon da, fehlt nur im UI.
-- In der Liste neben dem Label Badges anzeigen: „Pflicht", „Anmeldung", „System".
-- System-Felder können bearbeitet (Label, required, showOnSignup), aber **nicht gelöscht** werden (`system: true` im Datensatz, Löschen-Button ausgeblendet).
-- Edit-Modus: aktuell ist nur Anlegen möglich – wir ergänzen Inline-Bearbeitung pro Zeile (Label, required, showOnSignup, Optionen).
-
-## Technische Details
-
-### Typen (`src/lib/types.ts`)
-- `CustomFieldDef` bekommt optional `system?: boolean`.
-
-### Service (`src/services/customFields.service.ts`)
-- `deleteCustomField`: wirft Fehler, wenn `system === true`.
-- Neue Helper `validateCustomFields(values, defs): { ok: boolean; errors: Record<string,string> }`.
-
-### Seed (`src/services/seed.ts`)
-- Beim Init zusätzlich 6 System-Custom-Fields anlegen (idempotent via fixe IDs `system-telefon`, `system-firma` …).
-- Bei vorhandenen Mitgliedern: native Felder bleiben unverändert. Beim ersten Anzeigen im Mitglied wird `m.customFields[key] ?? m[key]` als Initialwert benutzt; nach erstem Speichern ist es synchronisiert.
-
-### Mitglied-Detail (`src/routes/app.mitglieder.$id.tsx`)
-- `StammForm` rendert nur noch die in Punkt 1 genannten festen Felder.
-- Neue Subkomponente `CustomFieldsBlock` rendert alle Defs, validiert, ruft `onChange`.
-- Vor `onSave`: `validateMember` aufrufen, bei Fehlern Toast + Inline-Hinweise.
-
-### Anmeldeformular (`src/components/anmeldung/AnmeldungForm.tsx`)
-- Bestehende native Felder Titel/Firma/Geburtsdatum/Telefon/Newsletter werden weiterhin gerendert (sie sind ja jetzt System-Custom-Fields mit `showOnSignup=true`) – aber über die generische Custom-Field-Renderschleife, **nicht** mehr hartcodiert. Damit greift Required automatisch.
-- Validierung schon vorhanden, wird um Required-Check erweitert.
-
-### Felder-Admin (`src/routes/app.admin.felder.tsx`)
-- Required-Checkbox + Anmeldeformular-Checkbox sichtbar.
-- System-Badge + Lösch-Schutz.
-- Inline-Edit-Modus pro Zeile.
-
-## Explizit ausgeschlossen
-
-- Keine Daten-Migration alter Werte in `customFields` (gemäß Wunsch „Ignorieren").
-- Adresse/IBAN/Steuerblock bleiben fest – nicht als Custom Fields verfügbar.
-- Keine Änderungen an Dashboard-/Newsletter-/SEPA-Logik (nutzen weiter die nativen Felder).
+- Keine Änderungen an den einzelnen Verwaltungsseiten selbst.
+- Keine Änderung an der Haupt-Sidebar oder am Header.
