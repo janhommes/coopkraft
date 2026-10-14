@@ -30,6 +30,7 @@ import { Route as AppAdminStammdatenRouteImport } from './routes/app.admin.stamm
 import { Route as AppAdminNewsletterRouteImport } from './routes/app.admin.newsletter'
 import { Route as AppAdminKontoRouteImport } from './routes/app.admin.konto'
 import { Route as AppAdminFelderRouteImport } from './routes/app.admin.felder'
+import { Route as AppAdminDatenbankRouteImport } from './routes/app.admin.datenbank'
 import { Route as AppAdminBrandingRouteImport } from './routes/app.admin.branding'
 import { Route as AppAdminAnteileRouteImport } from './routes/app.admin.anteile'
 import { Route as AppAdminAnmeldungRouteImport } from './routes/app.admin.anmeldung'
@@ -139,6 +140,11 @@ const AppAdminFelderRoute = AppAdminFelderRouteImport.update({
   path: '/felder',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminDatenbankRoute = AppAdminDatenbankRouteImport.update({
+  id: '/datenbank',
+  path: '/datenbank',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminBrandingRoute = AppAdminBrandingRouteImport.update({
   id: '/branding',
   path: '/branding',
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/anmeldung': typeof AppAdminAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
   '/app/admin/branding': typeof AppAdminBrandingRoute
+  '/app/admin/datenbank': typeof AppAdminDatenbankRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/newsletter': typeof AppAdminNewsletterRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/app/admin/anmeldung': typeof AppAdminAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
   '/app/admin/branding': typeof AppAdminBrandingRoute
+  '/app/admin/datenbank': typeof AppAdminDatenbankRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/newsletter': typeof AppAdminNewsletterRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/app/admin/anmeldung': typeof AppAdminAnmeldungRoute
   '/app/admin/anteile': typeof AppAdminAnteileRoute
   '/app/admin/branding': typeof AppAdminBrandingRoute
+  '/app/admin/datenbank': typeof AppAdminDatenbankRoute
   '/app/admin/felder': typeof AppAdminFelderRoute
   '/app/admin/konto': typeof AppAdminKontoRoute
   '/app/admin/newsletter': typeof AppAdminNewsletterRoute
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/app/admin/anmeldung'
     | '/app/admin/anteile'
     | '/app/admin/branding'
+    | '/app/admin/datenbank'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/newsletter'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/app/admin/anmeldung'
     | '/app/admin/anteile'
     | '/app/admin/branding'
+    | '/app/admin/datenbank'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/newsletter'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/app/admin/anmeldung'
     | '/app/admin/anteile'
     | '/app/admin/branding'
+    | '/app/admin/datenbank'
     | '/app/admin/felder'
     | '/app/admin/konto'
     | '/app/admin/newsletter'
@@ -472,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminFelderRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/datenbank': {
+      id: '/app/admin/datenbank'
+      path: '/datenbank'
+      fullPath: '/app/admin/datenbank'
+      preLoaderRoute: typeof AppAdminDatenbankRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/app/admin/branding': {
       id: '/app/admin/branding'
       path: '/branding'
@@ -500,6 +519,7 @@ interface AppAdminRouteChildren {
   AppAdminAnmeldungRoute: typeof AppAdminAnmeldungRoute
   AppAdminAnteileRoute: typeof AppAdminAnteileRoute
   AppAdminBrandingRoute: typeof AppAdminBrandingRoute
+  AppAdminDatenbankRoute: typeof AppAdminDatenbankRoute
   AppAdminFelderRoute: typeof AppAdminFelderRoute
   AppAdminKontoRoute: typeof AppAdminKontoRoute
   AppAdminNewsletterRoute: typeof AppAdminNewsletterRoute
@@ -512,6 +532,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminAnmeldungRoute: AppAdminAnmeldungRoute,
   AppAdminAnteileRoute: AppAdminAnteileRoute,
   AppAdminBrandingRoute: AppAdminBrandingRoute,
+  AppAdminDatenbankRoute: AppAdminDatenbankRoute,
   AppAdminFelderRoute: AppAdminFelderRoute,
   AppAdminKontoRoute: AppAdminKontoRoute,
   AppAdminNewsletterRoute: AppAdminNewsletterRoute,
