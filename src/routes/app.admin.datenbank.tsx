@@ -8,6 +8,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { resetDatabase } from "@/services/seed";
 import { exportBackup, getTableCounts, restoreBackup, STORE_LABELS, type BackupFile } from "@/services/backup.service";
 
 export const Route = createFileRoute("/app/admin/datenbank")({
@@ -20,6 +21,16 @@ function DatenbankAdmin() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<BackupFile | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const doReset = async () => {
+    setBusy(true);
+    try {
+      await resetDatabase();
+      window.localStorage.removeItem("demo-active-user");
+      toast.success("Demo-Daten zurückgesetzt");
+      window.location.reload();
+    } finally { setBusy(false); setConfirmReset(false); }
+  };
 
   const download = async () => {
     setBusy(true);
@@ -66,6 +77,7 @@ function DatenbankAdmin() {
         <CardContent className="flex flex-wrap gap-2">
           <Button onClick={download} disabled={busy}>Sicherung herunterladen</Button>
           <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={busy}>Sicherung wiederherstellen…</Button>
+          <Button variant="destructive" onClick={() => setConfirmReset(true)} disabled={busy}>Demo-Daten zurücksetzen</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
         </CardContent>
       </Card>
@@ -98,6 +110,18 @@ function DatenbankAdmin() {
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
             <AlertDialogAction onClick={restore}>Ersetzen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Demo-Daten zurücksetzen?</AlertDialogTitle>
+            <AlertDialogDescription>Alle aktuellen Daten werden gelöscht und durch die Beispieldaten ersetzt. Anschließend bist du als Greta Admin angemeldet.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={doReset}>Zurücksetzen</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
