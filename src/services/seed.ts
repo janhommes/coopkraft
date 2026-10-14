@@ -90,14 +90,14 @@ const defaultWorkflow: WorkflowConfig = {
 };
 
 const demoUsers: AppUser[] = [
-  { id: "u-anna", name: "Anna Mitglied", email: "anna@demo.de", roles: ["mitglied"] },
-  { id: "u-bernd", name: "Bernd Vorstand", email: "bernd@demo.de", roles: ["vorstand", "mitgliedsbestaetiger", "auszahler"] },
-  { id: "u-clara", name: "Clara Vorstand", email: "clara@demo.de", roles: ["vorstand", "mitgliedsbestaetiger"] },
-  { id: "u-dieter", name: "Dieter Vorstand", email: "dieter@demo.de", roles: ["vorstand", "mitgliedsbestaetiger", "kommunikation"] },
-  { id: "u-eva", name: "Eva Aufsichtsrat", email: "eva@demo.de", roles: ["aufsichtsrat"] },
-  { id: "u-frank", name: "Frank Buchhalter", email: "frank@demo.de", roles: ["zahlungspruefer", "auszahler"] },
-  { id: "u-gabi", name: "Gabi Mitgliederverwalter", email: "gabi@demo.de", roles: ["mitgliederverwalter"] },
-  { id: "u-greta", name: "Greta Admin", email: "greta@demo.de", roles: ["admin", "vorstand"] },
+  { id: "u-anna", name: "Anna Mitglied", email: "anna@demo.de", roles: [], groups: [] },
+  { id: "u-bernd", name: "Bernd Vorstand", email: "bernd@demo.de", roles: ["auszahler"], groups: ["egv-vorstand"] },
+  { id: "u-clara", name: "Clara Vorstand", email: "clara@demo.de", roles: [], groups: ["egv-vorstand"] },
+  { id: "u-dieter", name: "Dieter Vorstand", email: "dieter@demo.de", roles: [], groups: ["egv-vorstand", "egv-kommunikation"] },
+  { id: "u-eva", name: "Eva Aufsichtsrat", email: "eva@demo.de", roles: [], groups: ["egv-aufsichtsrat"] },
+  { id: "u-frank", name: "Frank Buchhalter", email: "frank@demo.de", roles: [], groups: ["egv-finanzen"] },
+  { id: "u-gabi", name: "Gabi Mitgliederverwalter", email: "gabi@demo.de", roles: [], groups: ["egv-verwaltung"] },
+  { id: "u-greta", name: "Greta Admin", email: "greta@demo.de", roles: [], groups: ["egv-admin", "egv-vorstand"] },
 ];
 
 const VORNAMEN = ["Lisa", "Tom", "Sven", "Mara", "Jonas", "Helena", "Paul", "Mia", "Felix", "Nora", "Karl", "Sara", "Lukas", "Julia", "Erik", "Tina", "Otto", "Lena", "Max", "Eva", "Jens", "Petra", "Hans", "Ute"];

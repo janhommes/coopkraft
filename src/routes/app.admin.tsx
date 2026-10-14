@@ -43,7 +43,7 @@ const groups: AdminGroup[] = [
     label: "System",
     items: [
       { to: "/app/admin/workflow", label: "Workflows & Kündigung" },
-      { to: "/app/admin/users", label: "Benutzer & Rollen" },
+      { to: "/app/admin/users", label: "Rollen & SSO" },
     ],
   },
 ];

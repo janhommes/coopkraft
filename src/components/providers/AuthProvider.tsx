@@ -1,6 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { listUsers } from "@/services/users.service";
+import { listMembers } from "@/services/members.service";
+import { getSsoConfig } from "@/services/settings.service";
+import { resolveRoles } from "@/lib/sso";
 import type { AppUser, Role } from "@/lib/types";
 import { hasAnyRole as hAny, hasRole as hRole } from "@/lib/permissions";
 
@@ -37,7 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [usersQ.data, activeId]);
 
-  const user = (usersQ.data ?? []).find((u) => u.id === activeId) ?? null;
+  const ssoQ = useQuery({ queryKey: ["ssoConfig"], queryFn: getSsoConfig });
+  const membersQ = useQuery({ queryKey: ["members"], queryFn: listMembers });
+  const raw = (usersQ.data ?? []).find((u) => u.id === activeId) ?? null;
+  // Effektive Rollen: SSO-Gruppen-Mapping + Overrides (+ Mitglied per E-Mail).
+  // Legacy-Benutzer ohne Gruppen behalten ihre gespeicherten Rollen.
+  const user: AppUser | null =
+    raw && raw.groups && ssoQ.data
+      ? (() => {
+          const r = resolveRoles({ email: raw.email, groups: raw.groups ?? [] }, ssoQ.data, membersQ.data ?? [], raw.roles);
+          return { ...raw, roles: r.roles, memberId: raw.memberId ?? r.memberId };
+        })()
+      : raw;
 
   const value: AuthCtx = {
     user,
