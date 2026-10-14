@@ -19,3 +19,11 @@ export async function getWorkflow(): Promise<WorkflowConfig | undefined> {
 export async function saveWorkflow(w: WorkflowConfig): Promise<void> {
   await put("workflowConfig", { id: WORKFLOW_KEY, data: w });
 }
+import { DEFAULT_SSO_CONFIG, type SsoRoleConfig } from "@/lib/sso";
+export async function getSsoConfig(): Promise<SsoRoleConfig> {
+  const wrap = await getOne<{ id: string; data: SsoRoleConfig }>("settings", "sso");
+  return wrap?.data ?? DEFAULT_SSO_CONFIG;
+}
+export async function saveSsoConfig(c: SsoRoleConfig): Promise<void> {
+  await put("settings", { id: "sso", data: c });
+}

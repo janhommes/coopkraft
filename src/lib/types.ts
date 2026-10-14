@@ -37,7 +37,10 @@ export interface AppUser {
   id: string;
   name: string;
   email: string;
+  /** Zusätzliche Rollen (Notfall-Override). Effektive Rollen = SSO-Gruppen-Mapping + Overrides. */
   roles: Role[];
+  /** Simulierte SSO-Gruppen (im echten Betrieb aus dem Token-Claim) */
+  groups?: string[];
   /** Optional verknüpftes Mitglied (für Rolle "mitglied") */
   memberId?: string;
 }
