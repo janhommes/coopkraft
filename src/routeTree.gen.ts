@@ -9,35 +9,35 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as AnmeldungRouteImport } from './routes/anmeldung'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EmbedAnmeldungRouteImport } from './routes/embed.anmeldung'
-import { Route as DokumenteSlugRouteImport } from './routes/dokumente.$slug'
-import { Route as AppSepaRouteImport } from './routes/app.sepa'
-import { Route as AppKommunikationRouteImport } from './routes/app.kommunikation'
-import { Route as AppDokumenteRouteImport } from './routes/app.dokumente'
-import { Route as AppDividendenRouteImport } from './routes/app.dividenden'
-import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
-import { Route as AppAnteileRouteImport } from './routes/app.anteile'
+import { Route as AnmeldungRouteImport } from './routes/anmeldung'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
-import { Route as AppMitgliederIndexRouteImport } from './routes/app.mitglieder.index'
-import { Route as AppMitgliederNeuRouteImport } from './routes/app.mitglieder.neu'
-import { Route as AppMitgliederIdRouteImport } from './routes/app.mitglieder.$id'
-import { Route as AppAdminWorkflowRouteImport } from './routes/app.admin.workflow'
-import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
-import { Route as AppAdminStammdatenRouteImport } from './routes/app.admin.stammdaten'
-import { Route as AppAdminNewsletterRouteImport } from './routes/app.admin.newsletter'
-import { Route as AppAdminKontoRouteImport } from './routes/app.admin.konto'
-import { Route as AppAdminFelderRouteImport } from './routes/app.admin.felder'
-import { Route as AppAdminDatenbankRouteImport } from './routes/app.admin.datenbank'
-import { Route as AppAdminBrandingRouteImport } from './routes/app.admin.branding'
-import { Route as AppAdminAnteileRouteImport } from './routes/app.admin.anteile'
+import { Route as AppAnteileRouteImport } from './routes/app.anteile'
+import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppDividendenRouteImport } from './routes/app.dividenden'
+import { Route as AppDokumenteRouteImport } from './routes/app.dokumente'
+import { Route as AppKommunikationRouteImport } from './routes/app.kommunikation'
+import { Route as AppSepaRouteImport } from './routes/app.sepa'
+import { Route as DokumenteSlugRouteImport } from './routes/dokumente.$slug'
+import { Route as EmbedAnmeldungRouteImport } from './routes/embed.anmeldung'
 import { Route as AppAdminAnmeldungRouteImport } from './routes/app.admin.anmeldung'
+import { Route as AppAdminAnteileRouteImport } from './routes/app.admin.anteile'
+import { Route as AppAdminBrandingRouteImport } from './routes/app.admin.branding'
+import { Route as AppAdminDatenbankRouteImport } from './routes/app.admin.datenbank'
+import { Route as AppAdminFelderRouteImport } from './routes/app.admin.felder'
+import { Route as AppAdminKontoRouteImport } from './routes/app.admin.konto'
+import { Route as AppAdminNewsletterRouteImport } from './routes/app.admin.newsletter'
+import { Route as AppAdminStammdatenRouteImport } from './routes/app.admin.stammdaten'
+import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
+import { Route as AppAdminWorkflowRouteImport } from './routes/app.admin.workflow'
+import { Route as AppMitgliederIndexRouteImport } from './routes/app.mitglieder.index'
+import { Route as AppMitgliederIdRouteImport } from './routes/app.mitglieder.$id'
+import { Route as AppMitgliederNeuRouteImport } from './routes/app.mitglieder.neu'
 
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnmeldungRoute = AnmeldungRouteImport.update({
@@ -45,44 +45,14 @@ const AnmeldungRoute = AnmeldungRouteImport.update({
   path: '/anmeldung',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmbedAnmeldungRoute = EmbedAnmeldungRouteImport.update({
-  id: '/embed/anmeldung',
-  path: '/embed/anmeldung',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DokumenteSlugRoute = DokumenteSlugRouteImport.update({
-  id: '/dokumente/$slug',
-  path: '/dokumente/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppSepaRoute = AppSepaRouteImport.update({
-  id: '/sepa',
-  path: '/sepa',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppKommunikationRoute = AppKommunikationRouteImport.update({
-  id: '/kommunikation',
-  path: '/kommunikation',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDokumenteRoute = AppDokumenteRouteImport.update({
-  id: '/dokumente',
-  path: '/dokumente',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDividendenRoute = AppDividendenRouteImport.update({
-  id: '/dividenden',
-  path: '/dividenden',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDashboardRoute = AppDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAnteileRoute = AppAnteileRouteImport.update({
@@ -90,64 +60,44 @@ const AppAnteileRoute = AppAnteileRouteImport.update({
   path: '/anteile',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminRoute = AppAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppMitgliederIndexRoute = AppMitgliederIndexRouteImport.update({
-  id: '/mitglieder/',
-  path: '/mitglieder/',
+const AppDividendenRoute = AppDividendenRouteImport.update({
+  id: '/dividenden',
+  path: '/dividenden',
   getParentRoute: () => AppRoute,
 } as any)
-const AppMitgliederNeuRoute = AppMitgliederNeuRouteImport.update({
-  id: '/mitglieder/neu',
-  path: '/mitglieder/neu',
+const AppDokumenteRoute = AppDokumenteRouteImport.update({
+  id: '/dokumente',
+  path: '/dokumente',
   getParentRoute: () => AppRoute,
 } as any)
-const AppMitgliederIdRoute = AppMitgliederIdRouteImport.update({
-  id: '/mitglieder/$id',
-  path: '/mitglieder/$id',
+const AppKommunikationRoute = AppKommunikationRouteImport.update({
+  id: '/kommunikation',
+  path: '/kommunikation',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminWorkflowRoute = AppAdminWorkflowRouteImport.update({
-  id: '/workflow',
-  path: '/workflow',
-  getParentRoute: () => AppAdminRoute,
+const AppSepaRoute = AppSepaRouteImport.update({
+  id: '/sepa',
+  path: '/sepa',
+  getParentRoute: () => AppRoute,
 } as any)
-const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AppAdminRoute,
+const DokumenteSlugRoute = DokumenteSlugRouteImport.update({
+  id: '/dokumente/$slug',
+  path: '/dokumente/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppAdminStammdatenRoute = AppAdminStammdatenRouteImport.update({
-  id: '/stammdaten',
-  path: '/stammdaten',
-  getParentRoute: () => AppAdminRoute,
+const EmbedAnmeldungRoute = EmbedAnmeldungRouteImport.update({
+  id: '/embed/anmeldung',
+  path: '/embed/anmeldung',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppAdminNewsletterRoute = AppAdminNewsletterRouteImport.update({
-  id: '/newsletter',
-  path: '/newsletter',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminKontoRoute = AppAdminKontoRouteImport.update({
-  id: '/konto',
-  path: '/konto',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminFelderRoute = AppAdminFelderRouteImport.update({
-  id: '/felder',
-  path: '/felder',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminDatenbankRoute = AppAdminDatenbankRouteImport.update({
-  id: '/datenbank',
-  path: '/datenbank',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminBrandingRoute = AppAdminBrandingRouteImport.update({
-  id: '/branding',
-  path: '/branding',
+const AppAdminAnmeldungRoute = AppAdminAnmeldungRouteImport.update({
+  id: '/anmeldung',
+  path: '/anmeldung',
   getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminAnteileRoute = AppAdminAnteileRouteImport.update({
@@ -155,10 +105,60 @@ const AppAdminAnteileRoute = AppAdminAnteileRouteImport.update({
   path: '/anteile',
   getParentRoute: () => AppAdminRoute,
 } as any)
-const AppAdminAnmeldungRoute = AppAdminAnmeldungRouteImport.update({
-  id: '/anmeldung',
-  path: '/anmeldung',
+const AppAdminBrandingRoute = AppAdminBrandingRouteImport.update({
+  id: '/branding',
+  path: '/branding',
   getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminDatenbankRoute = AppAdminDatenbankRouteImport.update({
+  id: '/datenbank',
+  path: '/datenbank',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminFelderRoute = AppAdminFelderRouteImport.update({
+  id: '/felder',
+  path: '/felder',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminKontoRoute = AppAdminKontoRouteImport.update({
+  id: '/konto',
+  path: '/konto',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminNewsletterRoute = AppAdminNewsletterRouteImport.update({
+  id: '/newsletter',
+  path: '/newsletter',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminStammdatenRoute = AppAdminStammdatenRouteImport.update({
+  id: '/stammdaten',
+  path: '/stammdaten',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminWorkflowRoute = AppAdminWorkflowRouteImport.update({
+  id: '/workflow',
+  path: '/workflow',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppMitgliederIndexRoute = AppMitgliederIndexRouteImport.update({
+  id: '/mitglieder/',
+  path: '/mitglieder/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMitgliederIdRoute = AppMitgliederIdRouteImport.update({
+  id: '/mitglieder/$id',
+  path: '/mitglieder/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMitgliederNeuRoute = AppMitgliederNeuRouteImport.update({
+  id: '/mitglieder/neu',
+  path: '/mitglieder/neu',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -337,11 +337,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/anmeldung': {
@@ -351,60 +351,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnmeldungRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/embed/anmeldung': {
-      id: '/embed/anmeldung'
-      path: '/embed/anmeldung'
-      fullPath: '/embed/anmeldung'
-      preLoaderRoute: typeof EmbedAnmeldungRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dokumente/$slug': {
-      id: '/dokumente/$slug'
-      path: '/dokumente/$slug'
-      fullPath: '/dokumente/$slug'
-      preLoaderRoute: typeof DokumenteSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/sepa': {
-      id: '/app/sepa'
-      path: '/sepa'
-      fullPath: '/app/sepa'
-      preLoaderRoute: typeof AppSepaRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/kommunikation': {
-      id: '/app/kommunikation'
-      path: '/kommunikation'
-      fullPath: '/app/kommunikation'
-      preLoaderRoute: typeof AppKommunikationRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/dokumente': {
-      id: '/app/dokumente'
-      path: '/dokumente'
-      fullPath: '/app/dokumente'
-      preLoaderRoute: typeof AppDokumenteRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/dividenden': {
-      id: '/app/dividenden'
-      path: '/dividenden'
-      fullPath: '/app/dividenden'
-      preLoaderRoute: typeof AppDividendenRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/dashboard': {
-      id: '/app/dashboard'
-      path: '/dashboard'
-      fullPath: '/app/dashboard'
-      preLoaderRoute: typeof AppDashboardRouteImport
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/anteile': {
@@ -414,88 +372,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnteileRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/admin': {
-      id: '/app/admin'
-      path: '/admin'
-      fullPath: '/app/admin'
-      preLoaderRoute: typeof AppAdminRouteImport
+    '/app/dashboard': {
+      id: '/app/dashboard'
+      path: '/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/mitglieder/': {
-      id: '/app/mitglieder/'
-      path: '/mitglieder'
-      fullPath: '/app/mitglieder/'
-      preLoaderRoute: typeof AppMitgliederIndexRouteImport
+    '/app/dividenden': {
+      id: '/app/dividenden'
+      path: '/dividenden'
+      fullPath: '/app/dividenden'
+      preLoaderRoute: typeof AppDividendenRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/mitglieder/neu': {
-      id: '/app/mitglieder/neu'
-      path: '/mitglieder/neu'
-      fullPath: '/app/mitglieder/neu'
-      preLoaderRoute: typeof AppMitgliederNeuRouteImport
+    '/app/dokumente': {
+      id: '/app/dokumente'
+      path: '/dokumente'
+      fullPath: '/app/dokumente'
+      preLoaderRoute: typeof AppDokumenteRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/mitglieder/$id': {
-      id: '/app/mitglieder/$id'
-      path: '/mitglieder/$id'
-      fullPath: '/app/mitglieder/$id'
-      preLoaderRoute: typeof AppMitgliederIdRouteImport
+    '/app/kommunikation': {
+      id: '/app/kommunikation'
+      path: '/kommunikation'
+      fullPath: '/app/kommunikation'
+      preLoaderRoute: typeof AppKommunikationRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/admin/workflow': {
-      id: '/app/admin/workflow'
-      path: '/workflow'
-      fullPath: '/app/admin/workflow'
-      preLoaderRoute: typeof AppAdminWorkflowRouteImport
-      parentRoute: typeof AppAdminRoute
+    '/app/sepa': {
+      id: '/app/sepa'
+      path: '/sepa'
+      fullPath: '/app/sepa'
+      preLoaderRoute: typeof AppSepaRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/app/admin/users': {
-      id: '/app/admin/users'
-      path: '/users'
-      fullPath: '/app/admin/users'
-      preLoaderRoute: typeof AppAdminUsersRouteImport
-      parentRoute: typeof AppAdminRoute
+    '/dokumente/$slug': {
+      id: '/dokumente/$slug'
+      path: '/dokumente/$slug'
+      fullPath: '/dokumente/$slug'
+      preLoaderRoute: typeof DokumenteSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/app/admin/stammdaten': {
-      id: '/app/admin/stammdaten'
-      path: '/stammdaten'
-      fullPath: '/app/admin/stammdaten'
-      preLoaderRoute: typeof AppAdminStammdatenRouteImport
-      parentRoute: typeof AppAdminRoute
+    '/embed/anmeldung': {
+      id: '/embed/anmeldung'
+      path: '/embed/anmeldung'
+      fullPath: '/embed/anmeldung'
+      preLoaderRoute: typeof EmbedAnmeldungRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/app/admin/newsletter': {
-      id: '/app/admin/newsletter'
-      path: '/newsletter'
-      fullPath: '/app/admin/newsletter'
-      preLoaderRoute: typeof AppAdminNewsletterRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/konto': {
-      id: '/app/admin/konto'
-      path: '/konto'
-      fullPath: '/app/admin/konto'
-      preLoaderRoute: typeof AppAdminKontoRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/felder': {
-      id: '/app/admin/felder'
-      path: '/felder'
-      fullPath: '/app/admin/felder'
-      preLoaderRoute: typeof AppAdminFelderRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/datenbank': {
-      id: '/app/admin/datenbank'
-      path: '/datenbank'
-      fullPath: '/app/admin/datenbank'
-      preLoaderRoute: typeof AppAdminDatenbankRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/branding': {
-      id: '/app/admin/branding'
-      path: '/branding'
-      fullPath: '/app/admin/branding'
-      preLoaderRoute: typeof AppAdminBrandingRouteImport
+    '/app/admin/anmeldung': {
+      id: '/app/admin/anmeldung'
+      path: '/anmeldung'
+      fullPath: '/app/admin/anmeldung'
+      preLoaderRoute: typeof AppAdminAnmeldungRouteImport
       parentRoute: typeof AppAdminRoute
     }
     '/app/admin/anteile': {
@@ -505,12 +435,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminAnteileRouteImport
       parentRoute: typeof AppAdminRoute
     }
-    '/app/admin/anmeldung': {
-      id: '/app/admin/anmeldung'
-      path: '/anmeldung'
-      fullPath: '/app/admin/anmeldung'
-      preLoaderRoute: typeof AppAdminAnmeldungRouteImport
+    '/app/admin/branding': {
+      id: '/app/admin/branding'
+      path: '/branding'
+      fullPath: '/app/admin/branding'
+      preLoaderRoute: typeof AppAdminBrandingRouteImport
       parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/datenbank': {
+      id: '/app/admin/datenbank'
+      path: '/datenbank'
+      fullPath: '/app/admin/datenbank'
+      preLoaderRoute: typeof AppAdminDatenbankRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/felder': {
+      id: '/app/admin/felder'
+      path: '/felder'
+      fullPath: '/app/admin/felder'
+      preLoaderRoute: typeof AppAdminFelderRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/konto': {
+      id: '/app/admin/konto'
+      path: '/konto'
+      fullPath: '/app/admin/konto'
+      preLoaderRoute: typeof AppAdminKontoRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/newsletter': {
+      id: '/app/admin/newsletter'
+      path: '/newsletter'
+      fullPath: '/app/admin/newsletter'
+      preLoaderRoute: typeof AppAdminNewsletterRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/stammdaten': {
+      id: '/app/admin/stammdaten'
+      path: '/stammdaten'
+      fullPath: '/app/admin/stammdaten'
+      preLoaderRoute: typeof AppAdminStammdatenRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/users': {
+      id: '/app/admin/users'
+      path: '/users'
+      fullPath: '/app/admin/users'
+      preLoaderRoute: typeof AppAdminUsersRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/workflow': {
+      id: '/app/admin/workflow'
+      path: '/workflow'
+      fullPath: '/app/admin/workflow'
+      preLoaderRoute: typeof AppAdminWorkflowRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/mitglieder/': {
+      id: '/app/mitglieder/'
+      path: '/mitglieder'
+      fullPath: '/app/mitglieder/'
+      preLoaderRoute: typeof AppMitgliederIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mitglieder/$id': {
+      id: '/app/mitglieder/$id'
+      path: '/mitglieder/$id'
+      fullPath: '/app/mitglieder/$id'
+      preLoaderRoute: typeof AppMitgliederIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mitglieder/neu': {
+      id: '/app/mitglieder/neu'
+      path: '/mitglieder/neu'
+      fullPath: '/app/mitglieder/neu'
+      preLoaderRoute: typeof AppMitgliederNeuRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
