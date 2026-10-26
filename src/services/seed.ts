@@ -1,5 +1,6 @@
 import { getAll, getOne, put, uid } from "./db";
 import { ensureSystemCustomFields } from "./customFields.service";
+import logoAsset from "@/assets/coopkraft-logo.png.asset.json";
 import type {
   AppUser,
   CustomFieldDef,
@@ -14,18 +15,19 @@ import type {
 const SEED_FLAG = "seeded-v1";
 
 const defaultSettings: Settings = {
-  genossenschaftsName: "Demo Energie eG",
-  primary: "#2e7d32",
-  accent: "#f5a524",
+  genossenschaftsName: "CoopKraft Energie eG",
+  primary: "#9fb73f",
+  accent: "#42a395",
   background: "#ffffff",
-  sidebarBackground: "#f7f7f5",
-  foreground: "#0a0a0a",
-  sidebarForeground: "#0a0a0a",
+  sidebarBackground: "#ffffff",
+  foreground: "#393838",
+  sidebarForeground: "#393838",
+  logoDataUrl: logoAsset.url,
   anteilsWert: 100,
   minAnteile: 1,
   maxAnteile: 100,
   bank: {
-    kontoinhaber: "Demo Energie eG",
+    kontoinhaber: "CoopKraft Energie eG",
     iban: "DE89370400440532013000",
     bic: "COBADEFFXXX",
     glaeubigerId: "DE98ZZZ09999999999",
@@ -45,12 +47,12 @@ const defaultSettings: Settings = {
     showNewsletter: true,
   },
   newsletter: {
-    headerHtml: '<table width="100%" cellpadding="0" cellspacing="0" style="background:#2e7d32;color:#ffffff;padding:24px;text-align:center;font-family:Arial,sans-serif;"><tr><td><h1 style="margin:0;font-size:22px;font-weight:600;">Demo Energie eG</h1><p style="margin:6px 0 0;font-size:13px;opacity:0.9;">Newsletter</p></td></tr></table>',
-    footerHtml: '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f0;color:#555;padding:20px;text-align:center;font-family:Arial,sans-serif;font-size:12px;"><tr><td>Demo Energie eG · Musterstraße 1 · 12345 Musterstadt<br/>Du erhältst diese Mail, weil du Mitglied bist oder den Newsletter abonniert hast.<br/><a href="#" style="color:#2e7d32;">Vom Newsletter abmelden</a></td></tr></table>',
-    background: "#eeeeee",
+    headerHtml: '<table width="100%" cellpadding="0" cellspacing="0" style="background:#9fb73f;color:#ffffff;padding:24px;text-align:center;font-family:Arial,sans-serif;"><tr><td><h1 style="margin:0;font-size:22px;font-weight:600;">CoopKraft Energie eG</h1><p style="margin:6px 0 0;font-size:13px;opacity:0.9;">Newsletter</p></td></tr></table>',
+    footerHtml: '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f3;color:#666464;padding:20px;text-align:center;font-family:Arial,sans-serif;font-size:12px;"><tr><td>CoopKraft Energie eG · Musterstraße 1 · 12345 Musterstadt<br/>Du erhältst diese Mail, weil du Mitglied bist oder den Newsletter abonniert hast.<br/><a href="#" style="color:#9fb73f;">Vom Newsletter abmelden</a></td></tr></table>',
+    background: "#e6e6e3",
     contentBackground: "#ffffff",
-    textColor: "#1a1a1a",
-    accentColor: "#2e7d32",
+    textColor: "#393838",
+    accentColor: "#9fb73f",
   },
 };
 
