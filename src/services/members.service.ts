@@ -1,7 +1,9 @@
-import { getAll, getOne, put, del, uid } from "./db";
+import { getAll, getOne, put, del, uid, isRemote } from "./db";
+import { api } from "./db.rest";
 import type { AppUser, Approval, Member, MemberStatus, PaymentConfirmation } from "@/lib/types";
 import { logAudit } from "./audit.service";
-import { getWorkflow } from "./settings.service";
+import { getSettings, getWorkflow } from "./settings.service";
+import { createLot } from "./shares.service";
 
 export const listMembers = (): Promise<Member[]> => getAll<Member>("members");
 export const getMember = (id: string): Promise<Member | undefined> => getOne<Member>("members", id);
@@ -30,6 +32,24 @@ export async function createMember(
   await saveMember(m);
   await logAudit(user, "Mitglied angelegt", `${m.vorname} ${m.nachname}`, m.id);
   return m;
+}
+
+export type AnmeldungInput = Omit<Member, "id" | "mitgliedsnummer" | "createdAt" | "updatedAt" | "status"> & {
+  anteile: number;
+};
+
+/**
+ * Öffentlicher Beitrittsantrag: legt Mitglied (pending) und Anteils-Lot an.
+ * Im Serverbetrieb ein einziger Aufruf, da anonyme Besucher nicht direkt schreiben dürfen.
+ */
+export async function submitAnmeldung(data: AnmeldungInput): Promise<Member> {
+  if (isRemote) return api<Member>("/public/anmeldung", { method: "POST", body: JSON.stringify(data) });
+  const { anteile, ...memberData } = data;
+  const settings = await getSettings();
+  if (!settings) throw new Error("Konfiguration nicht geladen");
+  const member = await createMember(memberData, null);
+  await createLot(member.id, anteile, settings.anteilsWert, null, false);
+  return member;
 }
 
 export const listApprovals = (): Promise<Approval[]> => getAll<Approval>("approvals");

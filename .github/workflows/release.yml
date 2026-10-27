@@ -1,0 +1,55 @@
+# Erstellt Releases mit semantic-release aus den Commit-Nachrichten auf main (Conventional Commits):
+#   fix: ...                          -> Patch (1.2.3 -> 1.2.4)
+#   feat: ...                         -> Minor (1.2.3 -> 1.3.0)
+#   feat!: ... / "BREAKING CHANGE:"   -> Major (1.2.3 -> 2.0.0)
+# Andere Commits (auch die von Lovable) lösen kein Release aus, sind aber im nächsten enthalten.
+# Läuft nach erfolgreichem CI auf main und manuell, nie in Forks: Die übernehmen Releases per sync-upstream.yml.
+# Konfiguration: .releaserc.json
+name: Release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write # Tag und GitHub-Release
+  issues: write # Hinweis "released" an Issues und PRs
+  pull-requests: write
+  actions: write # Deploy anstoßen
+
+concurrency: release
+
+jobs:
+  release:
+    # nur Pushes auf main in diesem Repo, keine Pull Requests (auch nicht aus Forks)
+    if: >-
+      ${{ !github.event.repository.fork && (github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # der Commit, den CI geprüft hat; ist main inzwischen weiter, überspringt semantic-release ihn
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: semantic-release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          before=$(git tag --points-at HEAD --list 'v*')
+          npx --yes -p semantic-release@25.0.9 -p conventional-changelog-conventionalcommits@9.3.1 semantic-release
+          tag=$(git tag --points-at HEAD --list 'v*' | head -n1)
+          # Releases mit dem GITHUB_TOKEN lösen deploy.yml nicht aus, darum hier anstoßen
+          if [ -z "$before" ] && [ -n "$tag" ]; then
+            gh workflow run deploy.yml --ref "$tag" -f environment=production
+            echo "::notice::$tag veröffentlicht, Deploy nach production angestoßen."
+          fi

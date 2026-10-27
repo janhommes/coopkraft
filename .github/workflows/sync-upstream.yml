@@ -1,0 +1,99 @@
+# Hält einen Fork (docs/setup.md) auf dem Stand der CoopKraft-Releases.
+#   Neue Minor-/Patch-Version (1.2.0 -> 1.3.0, 1.2.1) -> direkt in den Branch übernommen
+#   Neue Major-Version (1.x -> 2.0.0) oder Konflikt   -> Pull Request
+# Läuft täglich und manuell (Actions -> Updates -> Run workflow). Live geht ein Update erst mit einem Release.
+#
+# Einschalten im Fork: Repository-Secret SYNC_TOKEN anlegen, ein Fine-grained Token nur für den Fork mit den
+# Repository-Rechten Contents, Pull requests und Workflows: Read and write. Ohne das Secret passiert nichts.
+# Der eingebaute GITHUB_TOKEN reicht nicht: Er darf keine Workflow-Dateien ändern, und seine Pushes
+# lösen keine anderen Workflows (CI, Deploy nach dev) aus.
+name: Updates
+
+on:
+  schedule:
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write # Zeitplan aktiv halten
+
+concurrency: sync-upstream
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+    steps:
+      - name: Automatische Updates sind aus
+        if: env.SYNC_TOKEN == ''
+        run: echo "::notice::Automatische Updates sind aus. Zum Einschalten das Secret SYNC_TOKEN anlegen (docs/setup.md)."
+
+      # GitHub schaltet Zeitpläne in öffentlichen Repos nach 60 Tagen ohne Aktivität ab
+      - name: Zeitplan aktiv halten
+        if: env.SYNC_TOKEN != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/$GITHUB_REPOSITORY/actions/workflows/sync-upstream.yml/enable"
+
+      - uses: actions/checkout@v4
+        if: env.SYNC_TOKEN != ''
+        with:
+          token: ${{ secrets.SYNC_TOKEN }}
+          fetch-depth: 0
+
+      - name: Neues Release übernehmen
+        if: env.SYNC_TOKEN != ''
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          UPSTREAM=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.parent.full_name // ""')
+          if [ -z "$UPSTREAM" ]; then echo "Kein Fork, nichts zu tun."; exit 0; fi
+
+          LATEST=$(gh release view --repo "$UPSTREAM" --json tagName --jq .tagName 2>/dev/null || true)
+          if ! [[ "$LATEST" =~ ^v?([0-9]+)\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Kein Release mit Versionsnummer in $UPSTREAM gefunden (\"$LATEST\")."; exit 0
+          fi
+          NEW_MAJOR=${BASH_REMATCH[1]}
+
+          # Upstream-Tags in eigenem Namensraum, damit Release-Tags des Forks nicht stören
+          git fetch --quiet --no-tags "https://github.com/$UPSTREAM.git" "+refs/tags/*:refs/upstream/tags/*"
+          TARGET=$(git rev-parse "refs/upstream/tags/$LATEST^{commit}")
+
+          # Aktuelle Version: das höchste Upstream-Release, das schon im Branch steckt
+          CURRENT=""
+          for t in $(git for-each-ref --format='%(refname:lstrip=3)' refs/upstream/tags | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | sort -rV || true); do
+            if git merge-base --is-ancestor "refs/upstream/tags/$t" HEAD; then CURRENT=$t; break; fi
+          done
+          if [ "$CURRENT" = "$LATEST" ] || [ "$(printf '%s\n' "$CURRENT" "$LATEST" | sort -V | tail -n1)" != "$LATEST" ]; then
+            echo "Aktuell ($CURRENT)."; exit 0
+          fi
+
+          NOTES="https://github.com/$UPSTREAM/releases/tag/$LATEST"
+          BRANCH=$GITHUB_REF_NAME
+          REASON="Neue Hauptversion: Sie kann Änderungen enthalten, die Handarbeit erfordern. Bitte vorher die Release Notes lesen."
+
+          if [[ "$CURRENT" =~ ^v?([0-9]+)\. ]] && [ "${BASH_REMATCH[1]}" = "$NEW_MAJOR" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            if git merge -q --ff-only "$TARGET" 2>/dev/null || git merge --no-edit -m "CoopKraft $LATEST übernehmen" "$TARGET"; then
+              git push origin "HEAD:$BRANCH"
+              echo "::notice::$CURRENT -> $LATEST übernommen ($NOTES). Live geht es mit dem nächsten Release."
+              exit 0
+            fi
+            git merge --abort || true
+            REASON="Das Update überschneidet sich mit Änderungen in diesem Fork und ließ sich nicht automatisch übernehmen. Bitte die Konflikte im Pull Request lösen."
+          fi
+
+          # Pro Release nur ein Pull Request, auch wenn er abgelehnt wurde
+          PR_BRANCH="update/$LATEST"
+          if [ -n "$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$PR_BRANCH" --state all --json number --jq '.[].number')" ]; then
+            echo "Pull Request für $LATEST gibt es schon."; exit 0
+          fi
+          git push --force origin "$TARGET:refs/heads/$PR_BRANCH"
+          gh pr create --repo "$GITHUB_REPOSITORY" --base "$BRANCH" --head "$PR_BRANCH" \
+            --title "CoopKraft $LATEST" \
+            --body "$(printf 'Update von %s auf %s.\n\n%s\n\nRelease Notes: %s\n\nNach dem Zusammenführen wie gewohnt ein Release veröffentlichen, damit das Update live geht.' "${CURRENT:-einer älteren Version}" "$LATEST" "$REASON" "$NOTES")"
+          echo "::notice::Pull Request für $LATEST geöffnet."

@@ -1,0 +1,44 @@
+# Lokaler Stack: MariaDB + PHP-API (AUTH_MODE=dev). Start siehe .claude/skills/run-local-stack.
+#   docker compose -f backend/docker-compose.yml up -d
+#   API_PROXY=http://localhost:8092 VITE_API_URL=/api npm run dev
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: coopkraft
+      MARIADB_USER: coopkraft
+      MARIADB_PASSWORD: coopkraft
+      MARIADB_ROOT_PASSWORD: root
+    ports: ["3307:3306"]
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docker/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      retries: 20
+
+  api:
+    build: .
+    command: sh -c "[ -d vendor ] || composer install --no-interaction; php -S 0.0.0.0:8092 -t public public/index.php"
+    volumes:
+      - ./:/srv/backend
+      - ../docs:/srv/docs:ro
+    environment:
+      DB_HOST: db
+      DB_NAME: coopkraft
+      DB_USER: coopkraft
+      DB_PASSWORD: coopkraft
+      TEST_DB_NAME: coopkraft_test
+      AUTH_MODE: dev
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      COOKIE_SECURE: "false"
+      ADMIN_EMAILS: greta@demo.de
+    ports: ["8092:8092"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

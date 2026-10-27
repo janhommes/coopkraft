@@ -1,0 +1,30 @@
+{
+    "name": "coopkraft/backend",
+    "description": "CoopKraft REST-API (PHP + MySQL) für das Lovable-Frontend",
+    "license": "MIT",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "ext-json": "*",
+        "ext-pdo": "*",
+        "slim/slim": "^4.14",
+        "slim/psr7": "^1.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": { "CoopKraft\\": "src/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "CoopKraft\\Tests\\": "tests/" }
+    },
+    "scripts": {
+        "start": "php -S 0.0.0.0:8092 -t public public/index.php",
+        "test": "phpunit"
+    },
+    "config": {
+        "platform": { "php": "8.2.0" },
+        "sort-packages": true
+    }
+}

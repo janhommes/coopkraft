@@ -1,0 +1,81 @@
+# Deploy per FTP auf Shared Hosting (Apache + PHP + MySQL).
+#   Push auf main (auch Lovable-Commits)  -> Umgebung "dev"
+#   Veröffentlichtes GitHub-Release       -> Umgebung "production"
+#     (Releases von semantic-release lösen das nicht aus, release.yml startet den Deploy deshalb manuell)
+#   Manuell (Actions -> Deploy)           -> Umgebung nach Wahl
+#
+# Einrichtung (Settings -> Environments "dev" und "production"):
+#   Secrets:   FTP_HOST, FTP_USER, FTP_PASSWORD, DB_HOST, DB_NAME, DB_USER, DB_PASSWORD,
+#              OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, ADMIN_EMAILS
+#   Variables: APP_URL (z. B. https://mitglieder.example.de), FTP_SERVER_DIR (Web-Root der Subdomain, mit / am Ende)
+# Danach die Repository-Variable DEPLOY_ENABLED=true setzen (vorher wird nichts deployt).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Zielumgebung
+        type: choice
+        options: [dev, production]
+        default: dev
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'release' && 'production' || inputs.environment || 'dev' }}
+    concurrency: deploy-${{ github.event_name == 'release' && 'production' || inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer
+      - run: bun install --frozen-lockfile
+      - name: Vertrag Frontend/Backend
+        run: node scripts/check-contract.mjs
+      - name: Deploy-Paket bauen
+        run: scripts/build-deploy.sh
+      - name: Konfiguration schreiben (deploy/api/.env)
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          OIDC_ISSUER: ${{ secrets.OIDC_ISSUER }}
+          OIDC_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}
+          OIDC_CLIENT_SECRET: ${{ secrets.OIDC_CLIENT_SECRET }}
+          ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
+        run: |
+          printf '%s\n' \
+            "APP_URL=$APP_URL" \
+            "BASE_PATH=/api" \
+            "DB_HOST=$DB_HOST" \
+            "DB_NAME=$DB_NAME" \
+            "DB_USER=$DB_USER" \
+            "DB_PASSWORD=$DB_PASSWORD" \
+            "AUTH_MODE=oidc" \
+            "OIDC_ISSUER=$OIDC_ISSUER" \
+            "OIDC_CLIENT_ID=$OIDC_CLIENT_ID" \
+            "OIDC_CLIENT_SECRET=$OIDC_CLIENT_SECRET" \
+            "ADMIN_EMAILS=$ADMIN_EMAILS" \
+            "COOKIE_SECURE=true" \
+            > deploy/api/.env
+      - name: Upload per FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./deploy/
+          server-dir: ${{ vars.FTP_SERVER_DIR }}

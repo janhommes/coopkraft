@@ -29,7 +29,7 @@ function DatenbankAdmin() {
       window.localStorage.removeItem("demo-active-user");
       toast.success("Demo-Daten zurückgesetzt");
       window.location.reload();
-    } finally { setBusy(false); setConfirmReset(false); }
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); setConfirmReset(false); }
   };
 
   const download = async () => {

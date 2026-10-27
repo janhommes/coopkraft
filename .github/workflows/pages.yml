@@ -1,0 +1,61 @@
+# Veröffentlicht Website und Demo als GitHub Pages: https://janhommes.github.io/coopkraft/
+#   /         Website (docs/*.html, docs/site.css): Home, Manifest, Kontakt
+#   /demo/    die App im Demo-Modus (ohne VITE_API_URL: Daten nur im Browser), Stand von main
+# Läuft nach erfolgreichem CI auf main und manuell, nie in Forks.
+# Einrichtung (einmalig): Settings -> Pages -> Source "GitHub Actions".
+name: Pages
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Forks der Genossenschaften (docs/setup.md) veröffentlichen nichts; nur Pushes auf main, keine Pull Requests
+    if: >-
+      ${{ !github.event.repository.fork && (github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')) }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - id: pages
+        uses: actions/configure-pages@v6
+      - run: bun install --frozen-lockfile
+      - name: Demo bauen
+        # base_path ist "/coopkraft" (oder leer bei eigener Domain); TanStack übernimmt ihn als Router-Basis
+        run: SELF_HOST=1 npx vite build --base "${{ steps.pages.outputs.base_path }}/demo/"
+      - name: Seite zusammenstellen
+        run: |
+          mkdir -p _site/assets
+          cp docs/*.html docs/site.css _site/
+          cp docs/assets/coopkraft-logo.png docs/assets/beg-viersen-logo.png _site/assets/
+          cp -r dist/client _site/demo
+          cp _site/demo/_shell.html _site/demo/index.html
+          # GitHub Pages hat nur eine 404-Seite; sie lädt die Demo, damit Links wie /demo/app/mitglieder funktionieren
+          cp _site/demo/_shell.html _site/404.html
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5

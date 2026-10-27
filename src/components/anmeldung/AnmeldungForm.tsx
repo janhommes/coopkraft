@@ -17,8 +17,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { getSettings } from "@/services/settings.service";
 import { listCustomFields, validateCustomFields } from "@/services/customFields.service";
-import { createMember } from "@/services/members.service";
-import { createLot } from "@/services/shares.service";
+import { submitAnmeldung } from "@/services/members.service";
 import { isValidIban } from "@/services/sepa.service";
 import { LAND_LABELS, formatEuro } from "@/lib/locale";
 import type { Anrede, CustomFieldDef, Kontakttyp, Land } from "@/lib/types";
@@ -88,31 +87,28 @@ export function AnmeldungForm({ compact = false, layoutOverride }: { compact?: b
     mutationFn: async () => {
       if (!settings) throw new Error("Konfiguration nicht geladen");
       const cf = state.custom;
-      const member = await createMember(
-        {
-          typ: state.typ,
-          anrede: state.anrede,
-          titel: ((cf.titel as string) || state.titel) || undefined,
-          vorname: state.vorname.trim(),
-          nachname: state.nachname.trim(),
-          firma: ((cf.firma as string) || state.firma) || undefined,
-          geburtsdatum: ((cf.geburtsdatum as string) || state.geburtsdatum) || undefined,
-          email: state.email.trim(),
-          telefon: ((cf.telefon as string) || state.telefon) || undefined,
-          strasse: state.strasse,
-          hausnummer: state.hausnummer,
-          plz: state.plz,
-          ort: state.ort,
-          land: state.land,
-          iban: state.iban.replace(/\s+/g, ""),
-          bic: state.bic,
-          kontoinhaber: state.kontoinhaber || `${state.vorname} ${state.nachname}`,
-          newsletter: cf.newsletter !== undefined ? !!cf.newsletter : state.newsletter,
-          customFields: state.custom,
-        },
-        null,
-      );
-      await createLot(member.id, state.anteile, settings.anteilsWert, null, false);
+      const member = await submitAnmeldung({
+        typ: state.typ,
+        anrede: state.anrede,
+        titel: ((cf.titel as string) || state.titel) || undefined,
+        vorname: state.vorname.trim(),
+        nachname: state.nachname.trim(),
+        firma: ((cf.firma as string) || state.firma) || undefined,
+        geburtsdatum: ((cf.geburtsdatum as string) || state.geburtsdatum) || undefined,
+        email: state.email.trim(),
+        telefon: ((cf.telefon as string) || state.telefon) || undefined,
+        strasse: state.strasse,
+        hausnummer: state.hausnummer,
+        plz: state.plz,
+        ort: state.ort,
+        land: state.land,
+        iban: state.iban.replace(/\s+/g, ""),
+        bic: state.bic,
+        kontoinhaber: state.kontoinhaber || `${state.vorname} ${state.nachname}`,
+        newsletter: cf.newsletter !== undefined ? !!cf.newsletter : state.newsletter,
+        customFields: state.custom,
+        anteile: state.anteile,
+      });
       qc.invalidateQueries();
       return member;
     },
