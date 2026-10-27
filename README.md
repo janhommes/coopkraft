@@ -141,3 +141,7 @@ In short: `scripts/build-deploy.sh` builds `deploy/`, which contains the static 
 </a>
 
 CoopKraft is sponsored by the [Bürger Energie Genossenschaft Viersen (BEG Viersen)](https://buergerenergie-viersen.de/).
+
+## License
+
+CoopKraft is open source under the [MIT License](LICENSE).
