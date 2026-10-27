@@ -1,7 +1,8 @@
 # Erstellt Releases mit semantic-release aus den Commit-Nachrichten auf main (Conventional Commits):
-#   fix: ...                          -> Patch (1.2.3 -> 1.2.4)
-#   feat: ...                         -> Minor (1.2.3 -> 1.3.0)
-#   feat!: ... / "BREAKING CHANGE:"   -> Major (1.2.3 -> 2.0.0)
+#   fix: ...                          -> Patch (0.1.0 -> 0.1.1)
+#   feat: ...                         -> Minor (0.1.0 -> 0.2.0)
+#   feat!: ... / "BREAKING CHANGE:"   -> während der Alpha (0.x) ebenfalls Minor, siehe .releaserc.json
+# 1.0.0 gibt es erst, wenn die Regel "breaking -> minor" aus .releaserc.json entfernt ist und ein feat!: folgt.
 # Andere Commits (auch die von Lovable) lösen kein Release aus, sind aber im nächsten enthalten.
 # Läuft nach erfolgreichem CI auf main und manuell, nie in Forks: Die übernehmen Releases per sync-upstream.yml.
 # Konfiguration: .releaserc.json
