@@ -5,6 +5,9 @@
   </picture>
 </h1>
 
+> [!WARNING]
+> **ALPHA:** CoopKraft is being tested internally and is not meant for production use yet. This repository is a preview: expect changes, and don't use it for real member data.
+
 > Wie in professionellen Softwareprojekten üblich, ist diese Dokumentation auf Englisch. Warum wir CoopKraft bauen, steht in unserem [Manifest auf Deutsch](https://janhommes.github.io/coopkraft/manifest.html).
 
 **[Try the demo](https://janhommes.github.io/coopkraft/demo/)**: it runs entirely in your browser with sample data. The [website](https://janhommes.github.io/coopkraft/) is built from `docs/*.html` and published together with the demo by `.github/workflows/pages.yml`.
@@ -120,7 +123,7 @@ scripts/             contract check frontend/backend, deploy bundle
 - Demo mode: `bun install` and `npm run dev`
 - With backend: `docker compose -f backend/docker-compose.yml up -d`, then `API_PROXY=http://localhost:8092 VITE_API_URL=/api npx vite dev --port 8080`. Log in with the simulated SSO form.
 - Checks: `node scripts/check-contract.mjs`, `npx tsc --noEmit`, and the backend tests: `docker compose -f backend/docker-compose.yml exec api vendor/bin/phpunit`
-- Releases: once CI passes on `main`, [semantic-release](https://semantic-release.gitbook.io/) creates them from the commit messages ([Conventional Commits](https://www.conventionalcommits.org/)): `fix:` → patch, `feat:` → minor, `feat!:` or a `BREAKING CHANGE:` footer → major. Lovable's commit messages don't follow this format, so they never trigger a release on their own and ship with the next one. Each release is deployed to production (if `DEPLOY_ENABLED` is set) and reaches the cooperatives' forks: patch and minor versions automatically, major versions as a pull request.
+- Releases: once CI passes on `main`, [semantic-release](https://semantic-release.gitbook.io/) creates them from the commit messages ([Conventional Commits](https://www.conventionalcommits.org/)): `fix:` → patch, `feat:` → minor. During the alpha, versions stay at 0.x: `feat!:` or a `BREAKING CHANGE:` footer also only raises the minor version (rule in `.releaserc.json`; remove it to release 1.0.0). Lovable's commit messages don't follow this format, so they never trigger a release on their own and ship with the next one. Each release is deployed to production (if `DEPLOY_ENABLED` is set) and reaches the cooperatives' forks: patches automatically, new 0.x minor versions (later: major versions) as a pull request.
 
 ## Deployment
 
@@ -138,3 +141,7 @@ In short: `scripts/build-deploy.sh` builds `deploy/`, which contains the static 
 </a>
 
 CoopKraft is sponsored by the [Bürger Energie Genossenschaft Viersen (BEG Viersen)](https://buergerenergie-viersen.de/).
+
+## License
+
+CoopKraft is open source under the [MIT License](LICENSE).

@@ -1,6 +1,6 @@
 # Hält einen Fork (docs/setup.md) auf dem Stand der CoopKraft-Releases.
-#   Neue Minor-/Patch-Version (1.2.0 -> 1.3.0, 1.2.1) -> direkt in den Branch übernommen
-#   Neue Major-Version (1.x -> 2.0.0) oder Konflikt   -> Pull Request
+#   Neue Patch-Version, ab 1.0 auch Minor (0.1.1, 1.2.0 -> 1.3.0)      -> direkt in den Branch übernommen
+#   Neue Major-Version, in 0.x auch Minor (0.1 -> 0.2, 1.x -> 2.0.0)  -> Pull Request, ebenso bei Konflikten
 # Läuft täglich und manuell (Actions -> Updates -> Run workflow). Live geht ein Update erst mit einem Release.
 #
 # Einschalten im Fork: Repository-Secret SYNC_TOKEN anlegen, ein Fine-grained Token nur für den Fork mit den
@@ -53,10 +53,11 @@ jobs:
           if [ -z "$UPSTREAM" ]; then echo "Kein Fork, nichts zu tun."; exit 0; fi
 
           LATEST=$(gh release view --repo "$UPSTREAM" --json tagName --jq .tagName 2>/dev/null || true)
-          if ! [[ "$LATEST" =~ ^v?([0-9]+)\.[0-9]+\.[0-9]+$ ]]; then
+          if ! [[ "$LATEST" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Kein Release mit Versionsnummer in $UPSTREAM gefunden (\"$LATEST\")."; exit 0
           fi
-          NEW_MAJOR=${BASH_REMATCH[1]}
+          # Kompatibilitätsstufe: die Major-Version, in 0.x die Minor-Version (dort darf jede Minor-Version inkompatibel sein)
+          compat() { [[ "$1" =~ ^v?([0-9]+)\.([0-9]+)\. ]] || return 0; if [ "${BASH_REMATCH[1]}" = 0 ]; then echo "0.${BASH_REMATCH[2]}"; else echo "${BASH_REMATCH[1]}"; fi; }
 
           # Upstream-Tags in eigenem Namensraum, damit Release-Tags des Forks nicht stören
           git fetch --quiet --no-tags "https://github.com/$UPSTREAM.git" "+refs/tags/*:refs/upstream/tags/*"
@@ -73,9 +74,9 @@ jobs:
 
           NOTES="https://github.com/$UPSTREAM/releases/tag/$LATEST"
           BRANCH=$GITHUB_REF_NAME
-          REASON="Neue Hauptversion: Sie kann Änderungen enthalten, die Handarbeit erfordern. Bitte vorher die Release Notes lesen."
+          REASON="Diese Version kann Änderungen enthalten, die Handarbeit erfordern (neue Major-Version, in 0.x jede neue Minor-Version). Bitte vorher die Release Notes lesen."
 
-          if [[ "$CURRENT" =~ ^v?([0-9]+)\. ]] && [ "${BASH_REMATCH[1]}" = "$NEW_MAJOR" ]; then
+          if [ -n "$CURRENT" ] && [ "$(compat "$CURRENT")" = "$(compat "$LATEST")" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             if git merge -q --ff-only "$TARGET" 2>/dev/null || git merge --no-edit -m "CoopKraft $LATEST übernehmen" "$TARGET"; then

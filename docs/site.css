@@ -13,7 +13,6 @@
 * { box-sizing: border-box; }
 
 body {
-  position: relative;
   margin: 0;
   background: var(--paper);
   color: var(--ink);
@@ -22,6 +21,28 @@ body {
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Hinweisleiste oben auf jeder Seite, solange CoopKraft in der Alpha-Phase ist */
+.alpha {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  background: var(--orange);
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+}
+.alpha-tag {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0 0.5rem;
+  background: var(--ink);
+  color: var(--paper);
+  letter-spacing: 0.08em;
+}
+
+/* Bezugsrahmen für das GitHub-Icon, unterhalb der Hinweisleiste */
+.frame { position: relative; }
 
 /* Layout: Logo und Menü links, Inhalt rechts; auf schmalen Bildschirmen untereinander */
 .site {

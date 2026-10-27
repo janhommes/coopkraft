@@ -1,5 +1,8 @@
 # Setting up CoopKraft for your cooperative
 
+> [!WARNING]
+> **ALPHA:** CoopKraft is being tested internally and is not meant for production use yet. Use this guide only for test installations without real member data.
+
 This guide takes you from an empty hosting package to a running CoopKraft that your board, staff and members log into with your existing single sign-on (SSO). It is written for whoever looks after your cooperative's IT. You need basic experience with a hosting control panel and FTP; you do **not** need Lovable, Claude or any other AI tool to run CoopKraft.
 
 **What you end up with**
@@ -114,7 +117,7 @@ All settings, including optional ones, are listed in the [reference](#11-referen
 
 **Optional test instance.** Every push to `main` deploys to an environment called `dev`. To use that, set up `dev` like `production`, with its own subdomain and database. If you don't want a test instance, delete the `push:` trigger at the top of `.github/workflows/deploy.yml`, so that only releases and manual runs deploy.
 
-**Automatic updates (optional).** Once a day, the workflow `.github/workflows/sync-upstream.yml` checks for a new CoopKraft release. Minor and patch versions (e.g. 1.2.0 → 1.3.0 or 1.2.1) are merged into your `main` automatically. A new major version (e.g. 2.0.0) arrives as a pull request, so you can read the release notes first; so does an update that clashes with changes you made in your fork. Updates go live when you publish a release (step 6). To switch it on:
+**Automatic updates (optional).** Once a day, the workflow `.github/workflows/sync-upstream.yml` checks for a new CoopKraft release. Patch versions (e.g. 0.1.1) are merged into your `main` automatically. A version that may need manual steps arrives as a pull request, so you can read the release notes first: during the alpha (0.x) every new minor version (e.g. 0.2.0), from 1.0 on every new major version (e.g. 2.0.0). From 1.0 on, minor versions (e.g. 1.3.0) are merged automatically too. An update that clashes with changes you made in your fork also arrives as a pull request. Updates go live when you publish a release (step 6). To switch it on:
 
 1. Create a fine-grained personal access token (**your profile → Settings → Developer settings → Personal access tokens → Fine-grained tokens**). Under repository access, select only your fork. Under repository permissions, set **Contents**, **Pull requests** and **Workflows** to *Read and write*. If the fork belongs to an organization, the organization may have to approve the token.
 2. In your fork, add the token as the repository secret `SYNC_TOKEN` (**Settings → Secrets and variables → Actions → Secrets**).
