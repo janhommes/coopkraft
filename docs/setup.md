@@ -1,5 +1,8 @@
 # Setting up CoopKraft for your cooperative
 
+> [!WARNING]
+> **ALPHA:** CoopKraft is being tested internally and is not meant for production use yet. Use this guide only for test installations without real member data.
+
 This guide takes you from an empty hosting package to a running CoopKraft that your board, staff and members log into with your existing single sign-on (SSO). It is written for whoever looks after your cooperative's IT. You need basic experience with a hosting control panel and FTP; you do **not** need Lovable, Claude or any other AI tool to run CoopKraft.
 
 **What you end up with**

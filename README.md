@@ -5,6 +5,9 @@
   </picture>
 </h1>
 
+> [!WARNING]
+> **ALPHA:** CoopKraft is being tested internally and is not meant for production use yet. This repository is a preview: expect changes, and don't use it for real member data.
+
 > Wie in professionellen Softwareprojekten üblich, ist diese Dokumentation auf Englisch. Warum wir CoopKraft bauen, steht in unserem [Manifest auf Deutsch](https://janhommes.github.io/coopkraft/manifest.html).
 
 **[Try the demo](https://janhommes.github.io/coopkraft/demo/)**: it runs entirely in your browser with sample data. The [website](https://janhommes.github.io/coopkraft/) is built from `docs/*.html` and published together with the demo by `.github/workflows/pages.yml`.
