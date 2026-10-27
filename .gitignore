@@ -39,3 +39,6 @@ backend/.phpunit.result.cache
 deploy/
 
 .playwright-mcp/
+
+# Lovable-Planungsnotizen nicht versionieren
+.lovable/plan/
