@@ -1,6 +1,7 @@
-import { getAll, getOne, put, uid } from "./db";
+import { getAll, getOne, importTables, isRemote, put, uid } from "./db";
 import { ensureSystemCustomFields } from "./customFields.service";
-import logoAsset from "@/assets/coopkraft-logo.png.asset.json";
+// Als Data-URL eingebettet: funktioniert unter jedem Pfad (auch die Demo unter /coopkraft/demo/) und in Sicherungen
+import coopkraftLogo from "@/assets/coopkraft-logo.png?inline";
 import type {
   AppUser,
   CustomFieldDef,
@@ -22,7 +23,7 @@ const defaultSettings: Settings = {
   sidebarBackground: "#ffffff",
   foreground: "#393838",
   sidebarForeground: "#393838",
-  logoDataUrl: logoAsset.url,
+  logoDataUrl: coopkraftLogo,
   anteilsWert: 100,
   minAnteile: 1,
   maxAnteile: 100,
@@ -247,14 +248,20 @@ export async function seedIfEmpty(): Promise<void> {
 }
 
 export async function resetDatabase(): Promise<void> {
-  // Lösche flag damit reseed möglich
-  const stores = ["users", "members", "shareLots", "shareTransfers", "terminations", "approvals", "paymentConfirmations", "documents", "documentFiles", "campaigns", "dividends", "settings", "customFields", "workflowConfig", "auditLog", "meta"] as const;
-  const { getDb } = await import("./db");
-  const db = await getDb();
-  for (const s of stores) {
-    const tx = db.transaction(s, "readwrite");
-    await tx.objectStore(s).clear();
-    await tx.done;
-  }
+  // Im Serverbetrieb würde das echte Mitgliederdaten löschen; Wiederherstellen geht dort nur per Sicherung.
+  if (isRemote) throw new Error("Demo-Reset ist im Serverbetrieb deaktiviert");
+  // Alles leeren (inkl. Seed-Flag), dann Demo-Daten neu anlegen
+  await importTables({});
   await seedIfEmpty();
+}
+
+/**
+ * Server-Betrieb: legt nur Grundkonfiguration an (Einstellungen, Workflows, System-Felder),
+ * keine Demo-Daten. Wird nach dem Login eines Admins aufgerufen.
+ */
+export async function ensureBaseline(): Promise<void> {
+  // Ohne das Demo-Logo: Das eigene Logo lädt der Admin hoch (docs/setup.md, Schritt 6)
+  if (!(await getOne("settings", "singleton"))) await put("settings", { id: "singleton", data: { ...defaultSettings, logoDataUrl: undefined } });
+  if (!(await getOne("workflowConfig", "singleton"))) await put("workflowConfig", { id: "singleton", data: defaultWorkflow });
+  await ensureSystemCustomFields();
 }

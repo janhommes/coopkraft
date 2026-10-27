@@ -1,0 +1,3 @@
+-- Zweite Datenbank für PHPUnit (Tests leeren die Tabellen)
+CREATE DATABASE IF NOT EXISTS coopkraft_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON coopkraft_test.* TO 'coopkraft'@'%';

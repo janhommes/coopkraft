@@ -1,0 +1,44 @@
+{
+  "claim": "groups",
+  "unknownPolicy": "deny",
+  "mappings": [
+    {
+      "group": "egv-admin",
+      "roles": [
+        "admin"
+      ]
+    },
+    {
+      "group": "egv-vorstand",
+      "roles": [
+        "vorstand",
+        "mitgliedsbestaetiger"
+      ]
+    },
+    {
+      "group": "egv-aufsichtsrat",
+      "roles": [
+        "aufsichtsrat"
+      ]
+    },
+    {
+      "group": "egv-verwaltung",
+      "roles": [
+        "mitgliederverwalter"
+      ]
+    },
+    {
+      "group": "egv-finanzen",
+      "roles": [
+        "zahlungspruefer",
+        "auszahler"
+      ]
+    },
+    {
+      "group": "egv-kommunikation",
+      "roles": [
+        "kommunikation"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,750 @@
+{
+  "members": [
+    {
+      "id": "m-active",
+      "email": "anna@demo.de",
+      "status": "active"
+    },
+    {
+      "id": "m-pending",
+      "email": "paul@demo.de",
+      "status": "pending"
+    },
+    {
+      "id": "m-terminating",
+      "email": "tom@demo.de",
+      "status": "terminating"
+    },
+    {
+      "id": "m-terminated",
+      "email": "ex@demo.de",
+      "status": "terminated"
+    }
+  ],
+  "cases": [
+    {
+      "name": "Admin-Gruppe",
+      "identity": {
+        "email": "greta@demo.de",
+        "groups": [
+          "egv-admin"
+        ]
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [
+          "admin"
+        ],
+        "memberId": null
+      }
+    },
+    {
+      "name": "Gruppe mit Groß-/Kleinschreibung und Leerzeichen",
+      "identity": {
+        "email": "v@demo.de",
+        "groups": [
+          " EGV-Vorstand "
+        ]
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [
+          "vorstand",
+          "mitgliedsbestaetiger"
+        ],
+        "memberId": null
+      }
+    },
+    {
+      "name": "Aktives Mitglied per E-Mail",
+      "identity": {
+        "email": "anna@demo.de",
+        "groups": []
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [
+          "mitglied"
+        ],
+        "memberId": "m-active"
+      }
+    },
+    {
+      "name": "E-Mail ohne Beachtung der Groß-/Kleinschreibung",
+      "identity": {
+        "email": " Anna@Demo.DE ",
+        "groups": []
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [
+          "mitglied"
+        ],
+        "memberId": "m-active"
+      }
+    },
+    {
+      "name": "Kündigendes Mitglied bleibt Mitglied",
+      "identity": {
+        "email": "tom@demo.de",
+        "groups": []
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [
+          "mitglied"
+        ],
+        "memberId": "m-terminating"
+      }
+    },
+    {
+      "name": "Ausstehendes Mitglied: kein Zugang (deny)",
+      "identity": {
+        "email": "paul@demo.de",
+        "groups": []
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [],
+        "memberId": null
+      }
+    },
+    {
+      "name": "Beendetes Mitglied: kein Zugang (deny)",
+      "identity": {
+        "email": "ex@demo.de",
+        "groups": []
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [],
+        "memberId": null
+      }
+    },
+    {
+      "name": "Unbekannt mit unknownPolicy=mitglied",
+      "identity": {
+        "email": "neu@demo.de",
+        "groups": [
+          "fremd"
+        ]
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "mitglied",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [
+          "mitglied"
+        ],
+        "memberId": null
+      }
+    },
+    {
+      "name": "Unbekannt mit unknownPolicy=deny",
+      "identity": {
+        "email": "neu@demo.de",
+        "groups": [
+          "fremd"
+        ]
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [],
+      "expected": {
+        "roles": [],
+        "memberId": null
+      }
+    },
+    {
+      "name": "Overrides zuerst, dann Gruppen, dann Mitglied",
+      "identity": {
+        "email": "anna@demo.de",
+        "groups": [
+          "egv-finanzen",
+          "egv-admin"
+        ]
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [
+        "kommunikation"
+      ],
+      "expected": {
+        "roles": [
+          "kommunikation",
+          "admin",
+          "zahlungspruefer",
+          "auszahler",
+          "mitglied"
+        ],
+        "memberId": "m-active"
+      }
+    },
+    {
+      "name": "Doppelte Rollen nur einmal",
+      "identity": {
+        "email": "x@demo.de",
+        "groups": [
+          "egv-finanzen",
+          "egv-finanzen"
+        ]
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "auszahler",
+              "vorstand"
+            ]
+          }
+        ]
+      },
+      "overrides": [
+        "auszahler"
+      ],
+      "expected": {
+        "roles": [
+          "auszahler",
+          "zahlungspruefer",
+          "vorstand"
+        ],
+        "memberId": null
+      }
+    },
+    {
+      "name": "Unbekannt mit Override und deny",
+      "identity": {
+        "email": "notfall@demo.de",
+        "groups": []
+      },
+      "config": {
+        "claim": "groups",
+        "unknownPolicy": "deny",
+        "mappings": [
+          {
+            "group": "egv-admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          {
+            "group": "egv-vorstand",
+            "roles": [
+              "vorstand",
+              "mitgliedsbestaetiger"
+            ]
+          },
+          {
+            "group": "egv-aufsichtsrat",
+            "roles": [
+              "aufsichtsrat"
+            ]
+          },
+          {
+            "group": "egv-verwaltung",
+            "roles": [
+              "mitgliederverwalter"
+            ]
+          },
+          {
+            "group": "egv-finanzen",
+            "roles": [
+              "zahlungspruefer",
+              "auszahler"
+            ]
+          },
+          {
+            "group": "egv-kommunikation",
+            "roles": [
+              "kommunikation"
+            ]
+          }
+        ]
+      },
+      "overrides": [
+        "admin"
+      ],
+      "expected": {
+        "roles": [
+          "admin"
+        ],
+        "memberId": null
+      }
+    }
+  ]
+}

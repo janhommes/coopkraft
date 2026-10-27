@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Lovable pflegt bun.lockb (package-lock.json ist veraltet)
+      - run: bun install --frozen-lockfile
+      - name: Typen prüfen
+        run: npx tsc --noEmit
+      - name: Vertrag Frontend/Backend (Stores, Schema, Rollenauflösung)
+        run: node scripts/check-contract.mjs
+      - name: Build wie in Lovable (Cloudflare)
+        run: npm run build
+      - name: Build für Self-Hosting (statische SPA)
+        run: SELF_HOST=1 VITE_API_URL=/api npx vite build
+
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: coopkraft_test
+          MARIADB_USER: coopkraft
+          MARIADB_PASSWORD: coopkraft
+          MARIADB_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      # Mindestversion laut composer.json; Hosting läuft mit 8.4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo_mysql
+      - run: composer install --no-interaction --no-progress
+      - name: PHPUnit
+        run: vendor/bin/phpunit
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: "3306"
+          TEST_DB_NAME: coopkraft_test
+          DB_USER: coopkraft
+          DB_PASSWORD: coopkraft
